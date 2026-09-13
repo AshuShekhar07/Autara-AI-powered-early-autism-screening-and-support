@@ -55,7 +55,7 @@ app.use((err, _req, res, _next) => {
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log('[mongodb] Connected to', process.env.MONGODB_URI)
+    console.log('[mongodb] Connected to MongoDB')
     app.listen(PORT, () => {
       console.log(`[server] Autara backend running on http://localhost:${PORT}`)
     })
