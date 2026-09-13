@@ -1,0 +1,291 @@
+/* ============================================================
+   Autara — Design System Tokens
+   Mirrors the established palette from autara-dashboard/css/styles.css
+   ─ Background:    #F5F7F3 (soft sage-tinted off-white)
+   ─ Ink / primary: #1F2E2B (deep teal-charcoal)
+   ─ Brand:         #2F6F62 (muted deep teal)
+   ─ Accent CTA:    #C98A3E (warm amber-gold — sparing)
+   ─ Muted:         #8B8FA3 (dusty lavender-gray)
+   ─ Headings:  Fraunces
+   ─ Body/UI:   Public Sans
+   ============================================================ */
+
+/* ── TOKENS ── */
+:root {
+  --bg:              #F5F7F3;
+  --bg-card:         #FFFFFF;
+  --bg-tint:         #EEF2ED;
+  --bg-warm:         #FAF4EC;
+
+  --ink:             #1F2E2B;
+  --ink-secondary:   #4E5A57;
+  --ink-muted:       #8B8FA3;
+
+  --brand:           #2F6F62;
+  --brand-lt:        #E8F0EE;
+  --brand-dk:        #224F45;
+
+  --gold:            #C98A3E;
+  --gold-hover:      #AE7530;
+  --gold-lt:         #FAF3EA;
+
+  --ok-text:         #2C6351;
+  --ok-bg:           #E4EFEA;
+  --ok-border:       #BED5C2;
+
+  --notice-text:     #8C5028;
+  --notice-bg:       #F7EDE4;
+  --notice-border:   #E3C5A5;
+
+  --error-text:      #8B2020;
+  --error-bg:        #FDECEA;
+  --error-border:    #E3B5B5;
+
+  --border:          #E0E6DE;
+  --border-md:       #CDD6CB;
+  --border-focus:    #2F6F62;
+
+  --shadow-xs:  0 2px 8px -2px rgba(31,46,43,.05);
+  --shadow-sm:  0 4px 18px -3px rgba(31,46,43,.07);
+  --shadow-md:  0 12px 36px -6px rgba(31,46,43,.10);
+  --shadow-glow:0 8px 28px -4px rgba(201,138,62,.32);
+
+  --r-sm:  8px;
+  --r-md:  14px;
+  --r-lg:  20px;
+
+  --font-head: 'Fraunces', Georgia, serif;
+  --font-ui:   'Public Sans', system-ui, sans-serif;
+
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --dur:  220ms;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ul { list-style: none; }
+button { font: inherit; cursor: pointer; }
+img { display: block; max-width: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-head);
+  line-height: 1.25;
+  letter-spacing: -.02em;
+  color: var(--ink);
+}
+
+/* ── GLOBAL LINK ── */
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+a:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ── FORM ELEMENTS ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: .84rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  letter-spacing: .01em;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border-md);
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: .95rem;
+  transition: border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(47,111,98,.14);
+}
+
+.field input.has-error,
+.field select.has-error {
+  border-color: #C94040;
+  background: var(--error-bg);
+}
+
+.field__error {
+  font-size: .8rem;
+  color: var(--error-text);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
+  font-size: .95rem;
+  font-weight: 600;
+  transition: all var(--dur) var(--ease);
+  cursor: pointer;
+}
+
+/* Amber CTA — primary submit */
+.btn--primary {
+  background: var(--gold);
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--gold-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 32px -4px rgba(201,138,62,.42);
+}
+.btn--primary:active:not(:disabled) { transform: translateY(0); }
+.btn--primary:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Brand ghost */
+.btn--ghost {
+  background: transparent;
+  color: var(--brand);
+  border: 1.5px solid var(--brand);
+}
+.btn--ghost:hover { background: var(--brand-lt); }
+
+.btn--full { width: 100%; }
+
+/* Focus visible for all buttons */
+button:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* ── SPINNER ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+.spinner--brand {
+  border-color: rgba(47,111,98,.2);
+  border-top-color: var(--brand);
+}
+
+/* ── PAGE LOADING OVERLAY ── */
+.page-loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  z-index: 9999;
+}
+
+/* ── STATUS BOXES ── */
+.status-box {
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  font-size: .9rem;
+  line-height: 1.5;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.status-box--ok {
+  background: var(--ok-bg);
+  border: 1px solid var(--ok-border);
+  color: var(--ok-text);
+}
+
+.status-box--notice {
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
+  color: var(--notice-text);
+}
+
+.status-box--error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}
+
+.status-box__icon { flex-shrink: 0; margin-top: 1px; }
+
+/* ── STUB DASHBOARD PAGES ── */
+.stub-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.stub-page h1 { font-size: 2rem; }
+.stub-page p { color: var(--ink-muted); max-width: 420px; }
+
+/* ── Dashboard section divider ── */
+.db-section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 0 28px;
+}
+
+/* ── Dashboard charts row (shared, referenced by Dashboard.jsx) ── */
+.db-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 768px) {
+  .db-charts-row { grid-template-columns: 1fr; }
+}

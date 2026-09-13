@@ -1,0 +1,117 @@
+/* ── Auth page layout ── */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px 56px;
+  gap: 28px;
+  position: relative;
+}
+
+/* Skip link — visible only on focus */
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-200%);
+  background: var(--ink);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: var(--r-sm);
+  font-size: .88rem;
+  font-weight: 600;
+  z-index: 999;
+  transition: transform .15s ease;
+}
+.skip-link:focus { transform: translateX(-50%) translateY(0); }
+
+/* ── Brand mark above card ── */
+.auth-page__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.auth-page__logo-mark {
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 12px rgba(47,111,98,.22));
+}
+
+.auth-page__wordmark {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.auth-page__name {
+  font-family: var(--font-head);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+
+.auth-page__tagline {
+  font-size: .78rem;
+  color: var(--ink-muted);
+  font-weight: 400;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+/* ── Card ── */
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  padding: 36px 40px 40px;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* ── Footer note below card ── */
+.auth-page__footer {
+  font-size: .88rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.auth-page__switch-btn {
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.auth-page__switch-btn:hover { color: var(--brand-dk); }
+
+/* ── Responsive ── */
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 28px 20px 32px;
+    border-radius: var(--r-md);
+    border: none;
+    box-shadow: var(--shadow-sm);
+    /* Full-width on small screens */
+    max-width: 100%;
+  }
+
+  .auth-page {
+    padding: 32px 0 48px;
+    justify-content: flex-start;
+    padding-top: 48px;
+  }
+
+  .auth-page__brand {
+    padding: 0 16px;
+  }
+}

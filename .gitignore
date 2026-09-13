@@ -1,0 +1,18 @@
+# ── Node ──
+node_modules/
+npm-debug.log*
+
+# ── Environment secrets ──
+.env
+*.env.local
+
+# ── Vite build output ──
+frontend/dist/
+
+# ── Editor ──
+.vscode/
+.idea/
+
+# ── OS ──
+.DS_Store
+Thumbs.db

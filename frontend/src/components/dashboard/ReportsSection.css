@@ -1,0 +1,50 @@
+/* ── ReportsSection ── */
+
+.reports-section {
+  margin-bottom: 28px;
+}
+
+.reports-section__heading {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.02em;
+  margin-bottom: 16px;
+}
+
+.reports-empty {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-md);
+  border-radius: var(--r-md);
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.reports-empty__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+}
+
+.reports-empty__title {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.reports-empty__body {
+  font-size: .84rem;
+  color: var(--ink-muted);
+  max-width: 340px;
+  line-height: 1.55;
+}

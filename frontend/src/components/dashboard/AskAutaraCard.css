@@ -1,0 +1,71 @@
+/* ── AskAutaraCard ── */
+
+.ask-card {
+  background: linear-gradient(135deg, var(--bg-warm) 0%, var(--gold-lt) 100%);
+  border: 1px solid var(--notice-border);
+  border-radius: var(--r-md);
+  padding: 24px 26px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-xs);
+}
+
+.ask-card__icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-md);
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px -4px rgba(201,138,62,.45);
+}
+
+.ask-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ask-card__title {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.02em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ask-card__badge {
+  font-family: var(--font-ui);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--notice-text);
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.ask-card__body {
+  font-size: .88rem;
+  color: var(--ink-secondary);
+  line-height: 1.55;
+}
+
+@media (max-width: 520px) {
+  .ask-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+}

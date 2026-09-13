@@ -1,0 +1,116 @@
+/* ── Auth form shared styles ── */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Label + button row (used for password label + Forgot link) */
+.field__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.auth-form__link-btn {
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-size: .82rem;
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.auth-form__link-btn:hover { color: var(--brand-dk); }
+
+/* Input with reveal button */
+.field__input-wrap {
+  position: relative;
+}
+
+.field__input-wrap input {
+  padding-right: 42px;
+}
+
+.field__reveal-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease);
+}
+.field__reveal-btn:hover { color: var(--brand); }
+
+/* Password hint */
+.field__hint {
+  font-size: .78rem;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+/* ── Role-specific field reveal animation ── */
+/*
+  Hidden state: zero height + opacity, invisible to AT (aria-hidden).
+  Visible state: natural height (max-height trick) + full opacity.
+  No bounce — simple ease-out.
+*/
+.role-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 220ms cubic-bezier(.2,.8,.2,1),
+    opacity    180ms cubic-bezier(.2,.8,.2,1);
+  pointer-events: none;
+}
+
+.role-fields--visible {
+  max-height: 500px;  /* Generous cap — never truncates real content */
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    max-height 260ms cubic-bezier(.2,.8,.2,1),
+    opacity    200ms cubic-bezier(.2,.8,.2,1) 40ms;
+}
+
+/* ── Legal line ── */
+.auth-form__legal {
+  font-size: .78rem;
+  color: var(--ink-muted);
+  text-align: center;
+  line-height: 1.55;
+}
+.auth-form__legal a {
+  color: var(--brand);
+}
+
+/* ── Success state ── */
+.auth-form--success {
+  padding: 8px 0;
+}
+
+.success-notice {
+  padding: 18px 20px;
+  font-size: .92rem;
+  line-height: 1.6;
+}
+.success-notice strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
