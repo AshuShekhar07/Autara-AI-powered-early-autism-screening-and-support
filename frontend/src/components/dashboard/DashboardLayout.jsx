@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import NotificationBell from './NotificationBell'
 import './DashboardLayout.css'
 
 /* ── Inline SVG leaf logo mark (same as AuthPage) ── */
@@ -292,13 +293,17 @@ export default function DashboardLayout({ children, activeNav = 'dashboard', pag
             <LogoMark size={28} />
             <span className="db-mobile-brand__name">Autara</span>
           </Link>
-          <UserMenu user={user} role={role} onLogout={handleLogout} />
+          <div className="db-topnav__right">
+            <NotificationBell />
+            <UserMenu user={user} role={role} onLogout={handleLogout} />
+          </div>
         </div>
 
         {/* Desktop top nav */}
         <header className="db-topnav" role="banner">
           <span className="db-topnav__page-title">{pageTitle}</span>
           <div className="db-topnav__right">
+            <NotificationBell />
             <UserMenu user={user} role={role} onLogout={handleLogout} />
           </div>
         </header>

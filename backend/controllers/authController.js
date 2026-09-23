@@ -65,11 +65,16 @@ async function me(req, res) {
     }
 
     return res.json({
-      uid:      user.uid,
-      name:     user.name,
-      email:    user.email,
-      role:     user.role,
-      verified: user.verified,
+      uid:         user.uid,
+      name:        user.name,
+      email:       user.email,
+      role:        user.role,
+      verified:    user.verified,
+      // roleDetails is a Mixed field. For caregivers/patients it holds
+      // { childName, childDob }. For therapists/clinicians it holds
+      // { orgName, licenseNumber }. Sending it here avoids a separate
+      // profile API call on the frontend.
+      roleDetails: user.roleDetails || {},
     })
   } catch (err) {
     console.error('[me] DB error:', err)

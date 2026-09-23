@@ -7,6 +7,8 @@ import Dashboard           from './pages/Dashboard'
 import ClinicianDashboard  from './pages/ClinicianDashboard'
 import Screening           from './pages/Screening'
 import NotAuthorized       from './pages/NotAuthorized'
+import ChildProfile        from './pages/ChildProfile'
+import Milestones          from './pages/Milestones'
 
 export default function App() {
   return (
@@ -23,6 +25,26 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ── Protected: child profile (caregiver + patient) ── */}
+          <Route
+            path="/child-profile"
+            element={
+              <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
+                <ChildProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ── Protected: developmental milestones (caregiver + patient) ── */}
+          <Route
+            path="/milestones"
+            element={
+              <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
+                <Milestones />
               </ProtectedRoute>
             }
           />

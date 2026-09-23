@@ -23,17 +23,18 @@ async function fetchUserProfile(firebaseUser) {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return null
-    return res.json() // { name, role, verified }
+    return res.json() // { name, role, roleDetails, verified }
   } catch {
     return null
   }
 }
 
 export function AuthProvider({ children }) {
-  const [user,     setUser]     = useState(null)  // Firebase user object
-  const [role,     setRole]     = useState(null)  // 'caregiver' | 'patient' | 'therapist' | 'clinician' | 'admin'
-  const [verified, setVerified] = useState(null)  // Boolean
-  const [loading,  setLoading]  = useState(true)  // true until onAuthStateChanged first fires
+  const [user,        setUser]        = useState(null)  // Firebase user object
+  const [role,        setRole]        = useState(null)  // 'caregiver' | 'patient' | 'therapist' | 'clinician' | 'admin'
+  const [verified,    setVerified]    = useState(null)  // Boolean
+  const [loading,     setLoading]     = useState(true)  // true until onAuthStateChanged first fires
+  const [profileData, setProfileData] = useState(null)  // { name, roleDetails } from backend
 
   /* ── Listen for Firebase auth state ── */
   useEffect(() => {
@@ -44,11 +45,13 @@ export function AuthProvider({ children }) {
         if (profile) {
           setRole(profile.role)
           setVerified(profile.verified)
+          setProfileData({ name: profile.name, roleDetails: profile.roleDetails || {} })
         }
       } else {
         setUser(null)
         setRole(null)
         setVerified(null)
+        setProfileData(null)
       }
       setLoading(false)
     })
@@ -93,10 +96,11 @@ export function AuthProvider({ children }) {
     if (profile) {
       setRole(profile.role)
       setVerified(profile.verified)
+      setProfileData({ name: profile.name, roleDetails: profile.roleDetails || {} })
     }
   }
 
-  const value = { user, role, verified, loading, login, signup, logout, resetPassword, hydrateProfile }
+  const value = { user, role, verified, loading, profileData, login, signup, logout, resetPassword, hydrateProfile }
 
   return (
     <AuthContext.Provider value={value}>

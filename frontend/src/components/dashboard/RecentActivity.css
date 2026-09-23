@@ -1,0 +1,138 @@
+/* ── RecentActivity ── */
+
+.ra-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 22px 22px 16px;
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.ra-section:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-md);
+}
+
+/* ── Header ── */
+.ra-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ra-section__title {
+  font-family: var(--font-head);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.02em;
+}
+
+/* ── Timeline ── */
+.ra-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  list-style: none;
+  /* vertical guide line */
+  position: relative;
+}
+
+.ra-timeline::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--border);
+}
+
+/* ── Event ── */
+.ra-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 0;
+  position: relative;
+}
+
+.ra-event__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-lt);
+  color: var(--brand);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1; /* sits above the guide line */
+  border: 2px solid var(--bg-card); /* "cuts out" guide line cleanly */
+}
+
+.ra-event__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.ra-event__label {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  line-height: 1.3;
+}
+
+.ra-event__time {
+  font-size: .77rem;
+  color: var(--ink-muted);
+}
+
+.ra-event__exact {
+  color: var(--ink-muted);
+}
+
+/* ── Empty state ── */
+.ra-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 20px 12px;
+}
+
+.ra-empty__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+
+.ra-empty__title {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.ra-empty__body {
+  font-size: .82rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  max-width: 220px;
+}
