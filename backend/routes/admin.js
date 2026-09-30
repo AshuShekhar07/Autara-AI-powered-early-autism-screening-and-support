@@ -9,5 +9,6 @@ router.use(verifyFirebaseToken, requireRole(['admin']))
 
 router.get('/users',               admin.listUsers)
 router.patch('/users/:uid/verify', admin.verifyUser)
+router.get('/analytics',           admin.analytics)
 
 module.exports = router

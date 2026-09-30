@@ -38,6 +38,7 @@ app.use('/api/admin', require('./routes/admin'))
 app.use('/api/screenings', require('./routes/screenings'))
 app.use('/api/insights', require('./routes/insights'))
 app.use('/api/assistant', require('./routes/assistant'))
+app.use('/api/reports', require('./routes/reports'))
 
 // ── Health checks ──
 app.get('/api/health', (_req, res) => ok(res, { status: 'ok' }))

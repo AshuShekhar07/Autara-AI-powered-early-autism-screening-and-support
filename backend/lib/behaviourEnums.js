@@ -22,3 +22,18 @@ const BEHAVIOUR_LABELS = {
   withdrawal: 'Withdrawal', vocal_outburst: 'Vocal outburst', other: 'Something else',
 }
 module.exports.behaviourLabelOf = (v) => BEHAVIOUR_LABELS[v] || v
+
+const ANTECEDENT_LABELS = {
+  transition: 'Change of activity', demand_or_task: 'Asked to do something', denied_access: 'Told "no" / item or activity denied',
+  sensory_noise_light: 'Noise, light or other sensory input', low_attention_alone: 'Little attention / left alone',
+  social_interaction: 'Social interaction', routine_change: 'Change in routine', other: 'Something else',
+}
+const CONSEQUENCE_LABELS = {
+  comforted: 'Comforted', removed_from_situation: 'Taken out of the situation', demand_removed: 'Task or demand removed',
+  given_item: 'Given an item or activity', planned_ignoring: 'Planned ignoring', redirected: 'Redirected', other: 'Something else',
+}
+module.exports.labels = {
+  behaviour: (v) => BEHAVIOUR_LABELS[v] || v,
+  antecedent: (v) => ANTECEDENT_LABELS[v] || v,
+  consequence: (v) => CONSEQUENCE_LABELS[v] || v,
+}

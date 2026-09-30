@@ -6,6 +6,7 @@ import BehaviourHistory from '../../components/behaviour/BehaviourHistory'
 import ReviewPanel from '../../components/clinical/ReviewPanel'
 import InsightPanel from '../../components/clinical/InsightPanel'
 import Timeline from '../../components/clinical/Timeline'
+import ExportButtons from '../../components/ExportButtons'
 import TierPill from '../../components/clinical/TierPill'
 import { useAuth } from '../../context/AuthContext'
 import { useApi } from '../../hooks/useApi'
@@ -91,6 +92,7 @@ export default function CasePage() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <span className="sr-pill">{STATUS_LABELS[screening.status]}</span>
             <TierPill tier={override?.riskTier || screening.riskTier} />
+            {isClinician && <ExportButtons screeningId={screening.id} compact />}
           </div>
         </div>
         <p className="sr-disclaimer" role="note">{DISCLAIMER}</p>

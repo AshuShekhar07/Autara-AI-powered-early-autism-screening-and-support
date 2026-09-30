@@ -71,6 +71,7 @@ const NAV_BY_ROLE = {
     { id: 'behaviour', label: 'Behaviour log', href: '/behaviour', icon: ICONS.behaviour },
     { id: 'history',   label: 'History',       href: '/history',   icon: ICONS.history },
     { id: 'ask',       label: 'Ask Autara',    href: '/ask',       icon: ICONS.ask },
+    { id: 'reports',   label: 'Reports',       href: '/reports',   icon: ICONS.reports },
   ],
   therapist: [
     { id: 'caseload', label: 'Caseload', href: '/therapist', icon: ICONS.caseload },

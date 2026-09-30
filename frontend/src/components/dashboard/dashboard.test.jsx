@@ -24,7 +24,7 @@ beforeEach(() => { vi.clearAllMocks(); state.role = 'caregiver'; state.verified 
 
 describe('role-specific navigation', () => {
   it.each([
-    ['caregiver', ['Dashboard', 'New Screening', 'Behaviour log', 'History', 'Ask Autara']],
+    ['caregiver', ['Dashboard', 'New Screening', 'Behaviour log', 'History', 'Ask Autara', 'Reports']],
     ['therapist', ['Caseload']],
     ['clinician', ['Review queue', 'Caseload']],
     ['admin', ['Admin console']],

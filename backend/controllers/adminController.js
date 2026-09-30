@@ -3,6 +3,7 @@ const { AppError, ok, asyncHandler } = require('../utils/respond')
 const { requireBodyObject, cleanString, parseLimit } = require('../utils/validate')
 const { ROLES, isClinicalRole } = require('../utils/roles')
 const { audit } = require('../lib/audit')
+const { computeAnalytics } = require('../lib/analytics')
 
 /** Admin-facing user row. Child details (in roleDetails) are deliberately NOT exposed. */
 function userRow(u) {
@@ -70,4 +71,7 @@ const verifyUser = asyncHandler(async (req, res) => {
   return ok(res, { user: userRow(user.toObject()) })
 })
 
-module.exports = { listUsers, verifyUser }
+/** GET /api/admin/analytics — anonymised aggregates only (k-anonymity, k = 5). */
+const analytics = asyncHandler(async (_req, res) => ok(res, { analytics: await computeAnalytics() }))
+
+module.exports = { listUsers, verifyUser, analytics }

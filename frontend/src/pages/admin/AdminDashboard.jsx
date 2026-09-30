@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
 import { useApi } from '../../hooks/useApi'
 import { api } from '../../lib/api'
 import { formatDate } from '../../lib/format'
 import '../../components/clinical/clinical.css'
+
+const AnalyticsSection = lazy(() => import('../../components/admin/AnalyticsSection'))
 
 const PAGE_SIZE = 20
 
@@ -127,7 +129,7 @@ function UserList() {
   )
 }
 
-/** /admin — verification queue and user list. (Anonymised analytics are added in Phase 6.) */
+/** /admin — verification queue, anonymised analytics and the user list. */
 export default function AdminDashboard() {
   return (
     <DashboardLayout activeNav="admin" pageTitle="Admin console">
@@ -137,6 +139,9 @@ export default function AdminDashboard() {
           <p className="sc-muted">Administrators verify professionals and see anonymised, aggregate usage. Individual children's data is never shown here.</p>
         </div>
         <VerificationQueue />
+        <Suspense fallback={<div className="cl-state" role="status" aria-busy="true"><div className="spinner spinner--brand" /></div>}>
+          <AnalyticsSection />
+        </Suspense>
         <UserList />
       </div>
     </DashboardLayout>

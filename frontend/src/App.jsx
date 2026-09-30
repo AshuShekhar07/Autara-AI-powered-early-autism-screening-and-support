@@ -15,6 +15,7 @@ import ScreeningResult     from './pages/ScreeningResult'
 import Behaviour           from './pages/Behaviour'
 import History             from './pages/History'
 import Ask                 from './pages/Ask'
+import Reports             from './pages/Reports'
 import NotAuthorized       from './pages/NotAuthorized'
 import ChildProfile        from './pages/ChildProfile'
 import Milestones          from './pages/Milestones'
@@ -76,6 +77,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
                 <Behaviour />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
+                <Reports />
               </ProtectedRoute>
             }
           />

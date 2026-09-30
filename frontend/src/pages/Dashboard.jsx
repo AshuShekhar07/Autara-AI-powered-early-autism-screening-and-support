@@ -13,6 +13,7 @@ import CareTeamSection          from '../components/dashboard/CareTeamSection'
 import RecentActivity           from '../components/dashboard/RecentActivity'
 import ResourcesSection         from '../components/dashboard/ResourcesSection'
 import AskAutaraCard            from '../components/dashboard/AskAutaraCard'
+import ReportsSection           from '../components/dashboard/ReportsSection'
 import InsightForFamily         from '../components/InsightForFamily'
 import LogBehaviourForm         from '../components/behaviour/LogBehaviourForm'
 import { useChildren }          from '../context/ChildContext'
@@ -98,6 +99,7 @@ export default function Dashboard() {
       )}
 
       {activeChild && <AskAutaraCard />}
+      {activeChild && <ReportsSection />}
 
       <ResourcesSection />
     </DashboardLayout>
