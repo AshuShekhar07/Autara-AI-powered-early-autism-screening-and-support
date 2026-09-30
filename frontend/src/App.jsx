@@ -6,6 +6,7 @@ import AuthPage            from './pages/auth/AuthPage'
 import Dashboard           from './pages/Dashboard'
 import ClinicianDashboard  from './pages/ClinicianDashboard'
 import Screening           from './pages/Screening'
+import ScreeningResult     from './pages/ScreeningResult'
 import NotAuthorized       from './pages/NotAuthorized'
 import ChildProfile        from './pages/ChildProfile'
 import Milestones          from './pages/Milestones'
@@ -57,6 +58,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
                 <Screening />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/screenings/:id"
+            element={
+              <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
+                <ScreeningResult />
               </ProtectedRoute>
             }
           />

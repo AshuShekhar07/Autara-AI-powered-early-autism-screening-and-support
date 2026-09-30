@@ -121,7 +121,7 @@
 
 .domain-bar__row {
   display: grid;
-  grid-template-columns: 130px 1fr 36px;
+  grid-template-columns: minmax(96px, 190px) 1fr 40px;
   align-items: center;
   gap: 12px;
 }
@@ -130,9 +130,7 @@
   font-size: .83rem;
   font-weight: 500;
   color: var(--ink-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .domain-bar__track {

@@ -4,6 +4,7 @@ Run:  uvicorn app.main:app --host 127.0.0.1 --port 8000     (or: python -m app)
 """
 from fastapi import Depends, FastAPI
 
+from app.screening.router import router as screening_router
 from app.security import require_internal_key
 
 app = FastAPI(
@@ -19,5 +20,5 @@ def health() -> dict:
     return {"status": "ok", "service": "autara-ai-service"}
 
 
-# Every business router is mounted with the internal-key dependency:
-#   app.include_router(screening_router, dependencies=[Depends(require_internal_key)])
+# Every business router is mounted with the internal-key dependency.
+app.include_router(screening_router, dependencies=[Depends(require_internal_key)])

@@ -67,5 +67,6 @@ module.exports = {
   screen:   (payload) => request('/screen',   { body: payload, timeoutMs: TIMEOUTS.screen }),
   insights: (payload) => request('/insights', { body: payload, timeoutMs: TIMEOUTS.insights }),
   ask:      (payload) => request('/ask',      { body: payload, timeoutMs: TIMEOUTS.ask }),
+  instrument: ()      => request('/instrument', { method: 'GET', timeoutMs: TIMEOUTS.screen }),
   health:   ()        => request('/health',   { method: 'GET', timeoutMs: TIMEOUTS.health }),
 }

@@ -65,8 +65,8 @@ async function makeUser(uid, role, extra = {}) {
 /** ISO date string for a child that is `months` old today (synthetic). */
 function dobForAge(months) {
   const d = new Date()
+  d.setUTCDate(1) // day 1 avoids month-length overflow and makes the age exact
   d.setUTCMonth(d.getUTCMonth() - months)
-  d.setUTCDate(Math.min(d.getUTCDate(), 28))
   return d.toISOString().slice(0, 10)
 }
 
