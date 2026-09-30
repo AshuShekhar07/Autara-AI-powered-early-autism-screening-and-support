@@ -31,3 +31,10 @@ Running log of choices made where the brief left room. Newest at the bottom of e
 - **D-018 Domain grouping** (joint attention, social engagement, communication, imitation/play, sensory/motor) is Autara's own, has no clinical validation, and is labelled as such in code, API and UI.
 - **D-019 ML model** uses raw yes/no answers as features (logistic regression, class-balanced, 5-fold stratified CV). `train.py` refuses to run without a CSV, detects label leakage (≥98% agreement with a rule threshold) and writes it into the model card. Tests of the pipeline use random noise CSVs in tmp dirs and assert mechanics only.
 - **D-020 Frontend tests** use Vitest + Testing Library with the API and auth context mocked (Firebase can't be exercised offline).
+
+## Behaviour tracking (Phase 3)
+- **D-021 Local-time facets stored per log** (`local.hour`, `local.weekday` Mon=0, `local.weekStart`), computed from the client-sent `tzOffsetMinutes` (see D-012). Editing a log's time recomputes them.
+- **D-022 One `$sum` per `$group`.** Count and intensity-sum are separate small aggregations merged in JS. Real MongoDB handles several accumulators fine; the Mongo-compatible engine used for local tests did not, and separate pipelines are also trivial to read.
+- **D-023 Who can write logs:** caregiver, patient, therapist. Verified care-team clinicians can read logs and summaries but not create them (per brief). Edit/delete: author only, both audited.
+- **D-024 Charts:** Recharts, lazy-loaded (only chart pages download it). Single series → one brand hue; every chart has loading / error+retry / empty states and a "View as table" switch; the trigger heat table always prints the number in the cell (colour is never the only channel).
+- **D-025 Behaviour notes** are free text that may later be sent to the LLM as evidence: the form asks users not to include names and the evidence builder (Phase 5) truncates notes.

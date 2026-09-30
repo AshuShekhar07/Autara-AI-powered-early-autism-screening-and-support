@@ -1,12 +1,14 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ChildProvider } from './context/ChildContext'
 import ProtectedRoute      from './components/auth/ProtectedRoute'
 import AuthPage            from './pages/auth/AuthPage'
 import Dashboard           from './pages/Dashboard'
 import ClinicianDashboard  from './pages/ClinicianDashboard'
 import Screening           from './pages/Screening'
 import ScreeningResult     from './pages/ScreeningResult'
+import Behaviour           from './pages/Behaviour'
 import NotAuthorized       from './pages/NotAuthorized'
 import ChildProfile        from './pages/ChildProfile'
 import Milestones          from './pages/Milestones'
@@ -17,6 +19,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ChildProvider>
         <Routes>
           {/* ── Public auth routes ── */}
           <Route path="/login"  element={<AuthPage />} />
@@ -58,6 +61,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
                 <Screening />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/behaviour"
+            element={
+              <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
+                <Behaviour />
               </ProtectedRoute>
             }
           />
@@ -131,6 +143,7 @@ export default function App() {
             </div>
           } />
         </Routes>
+        </ChildProvider>
       </AuthProvider>
     </BrowserRouter>
   )
