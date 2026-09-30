@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -7,23 +7,17 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth'
 import { auth } from '../lib/firebase'
+import { api } from '../lib/api'
 
 const AuthContext = createContext(null)
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
-
 /**
- * Fetches the authenticated user's role and verified status from the backend.
- * Sends the Firebase ID token in the Authorization header.
+ * Fetches the authenticated user's profile (role, verified, roleDetails) from the backend.
+ * Returns null when the profile can't be loaded (e.g. signup never finished).
  */
-async function fetchUserProfile(firebaseUser) {
+async function fetchUserProfile() {
   try {
-    const token = await firebaseUser.getIdToken()
-    const res   = await fetch(`${API_BASE}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (!res.ok) return null
-    return res.json() // { name, role, roleDetails, verified }
+    return await api.get('/api/auth/me') // { uid, name, email, role, verified, roleDetails }
   } catch {
     return null
   }
@@ -36,44 +30,43 @@ export function AuthProvider({ children }) {
   const [loading,     setLoading]     = useState(true)  // true until onAuthStateChanged first fires
   const [profileData, setProfileData] = useState(null)  // { name, roleDetails } from backend
 
+  const applyProfile = useCallback((profile) => {
+    if (profile) {
+      setRole(profile.role)
+      setVerified(profile.verified)
+      setProfileData({ name: profile.name, email: profile.email, roleDetails: profile.roleDetails || {} })
+    } else {
+      setRole(null)
+      setVerified(null)
+      setProfileData(null)
+    }
+  }, [])
+
   /* ── Listen for Firebase auth state ── */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser)
-        const profile = await fetchUserProfile(firebaseUser)
-        if (profile) {
-          setRole(profile.role)
-          setVerified(profile.verified)
-          setProfileData({ name: profile.name, roleDetails: profile.roleDetails || {} })
-        }
+        applyProfile(await fetchUserProfile())
       } else {
         setUser(null)
-        setRole(null)
-        setVerified(null)
-        setProfileData(null)
+        applyProfile(null)
       }
       setLoading(false)
     })
     return unsubscribe
-  }, [])
+  }, [applyProfile])
 
   /* ── Actions ── */
 
-  /**
-   * Signs in an existing user with email + password.
-   * Returns the Firebase UserCredential on success.
-   * Throws on failure (caller handles the error message).
-   */
+  /** Signs in with email + password. Throws on failure (caller shows the message). */
   async function login(email, password) {
-    const cred = await signInWithEmailAndPassword(auth, email, password)
-    // Profile hydration happens automatically via onAuthStateChanged
-    return cred
+    return signInWithEmailAndPassword(auth, email, password)
   }
 
   /**
-   * Creates a new Firebase account. The caller (SignupForm) is responsible
-   * for POSTing the user profile to /api/auth/signup after this resolves.
+   * Creates a new Firebase account. The caller (SignupForm) then POSTs the profile
+   * to /api/auth/signup (the backend takes uid/email from the verified token).
    */
   async function signup(email, password) {
     return createUserWithEmailAndPassword(auth, email, password)
@@ -88,16 +81,13 @@ export function AuthProvider({ children }) {
   }
 
   /**
-   * Manually hydrates role + verified after the backend profile is created
-   * (called by SignupForm right after the POST /api/auth/signup succeeds).
+   * (Re)loads role + verified from the backend and returns the profile
+   * (or null). Used after login/signup and by the pending-verification page.
    */
-  async function hydrateProfile(firebaseUser) {
-    const profile = await fetchUserProfile(firebaseUser)
-    if (profile) {
-      setRole(profile.role)
-      setVerified(profile.verified)
-      setProfileData({ name: profile.name, roleDetails: profile.roleDetails || {} })
-    }
+  async function hydrateProfile() {
+    const profile = await fetchUserProfile()
+    applyProfile(profile)
+    return profile
   }
 
   const value = { user, role, verified, loading, profileData, login, signup, logout, resetPassword, hydrateProfile }

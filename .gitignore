@@ -16,3 +16,22 @@ frontend/dist/
 # ── OS ──
 .DS_Store
 Thumbs.db
+
+# ── AI service (Python) ──
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+ai-service/storage/
+ai-service/data/*
+!ai-service/data/README.md
+ai-service/ml/model.joblib
+ai-service/knowledge/*
+!ai-service/knowledge/README.md
+!ai-service/knowledge/sources.yaml
+
+# ── Misc ──
+frontend/.env
+backend/.env
+ai-service/.env

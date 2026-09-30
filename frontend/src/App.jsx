@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute      from './components/auth/ProtectedRoute'
 import AuthPage            from './pages/auth/AuthPage'
@@ -9,6 +9,8 @@ import Screening           from './pages/Screening'
 import NotAuthorized       from './pages/NotAuthorized'
 import ChildProfile        from './pages/ChildProfile'
 import Milestones          from './pages/Milestones'
+import PendingVerification from './pages/PendingVerification'
+import RootRedirect        from './components/auth/RootRedirect'
 
 export default function App() {
   return (
@@ -59,15 +61,38 @@ export default function App() {
             }
           />
 
-          {/* ── Protected: therapist + clinician ── */}
+          {/* ── Protected: therapist (verified) ── */}
           <Route
-            path="/clinician-dashboard"
+            path="/therapist"
             element={
-              <ProtectedRoute allowedRoles={['therapist', 'clinician']}>
+              <ProtectedRoute allowedRoles={['therapist']}>
                 <ClinicianDashboard />
               </ProtectedRoute>
             }
           />
+
+          {/* ── Protected: clinician (verified) ── */}
+          <Route
+            path="/clinician"
+            element={
+              <ProtectedRoute allowedRoles={['clinician']}>
+                <ClinicianDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ── Unverified therapist / clinician ── */}
+          <Route
+            path="/pending-verification"
+            element={
+              <ProtectedRoute allowedRoles={['therapist', 'clinician']} allowUnverified>
+                <PendingVerification />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Old path → role home */}
+          <Route path="/clinician-dashboard" element={<RootRedirect />} />
 
           {/* ── Protected: admin (stub) ── */}
           <Route
@@ -86,7 +111,7 @@ export default function App() {
           <Route path="/not-authorized" element={<NotAuthorized />} />
 
           {/* ── Root redirect ── */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<RootRedirect />} />
 
           {/* ── 404 catch-all ── */}
           <Route path="*" element={

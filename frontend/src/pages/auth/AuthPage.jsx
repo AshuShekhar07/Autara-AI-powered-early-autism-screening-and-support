@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { homeRouteFor } from '../../lib/roles'
 import AuthToggle from '../../components/auth/AuthToggle'
 import LoginForm  from './LoginForm'
 import SignupForm from './SignupForm'
@@ -15,6 +17,10 @@ export default function AuthPage() {
   const [searchParams] = useSearchParams()
   const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
   const [activeTab, setActiveTab] = useState(initialTab)
+  const { user, role, verified, loading } = useAuth()
+
+  // Already signed in (and profile loaded) → go straight to the role's home.
+  if (!loading && user && role) return <Navigate to={homeRouteFor(role, verified)} replace />
 
   return (
     <main className="auth-page" id="main-content">
