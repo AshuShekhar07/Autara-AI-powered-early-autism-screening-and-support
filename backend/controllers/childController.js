@@ -147,21 +147,8 @@ const removeCareTeamMember = asyncHandler(async (req, res) => {
   return ok(res, { careTeam: await hydrateCareTeam(req.child) })
 })
 
-/** GET /api/me/caseload — verified therapist / clinician: their assigned children. */
-const caseload = asyncHandler(async (req, res) => {
-  const children = await Child.find({ 'careTeam.uid': req.dbUser.uid }).sort({ name: 1 })
-  return ok(res, {
-    children: children.map((c) => ({
-      id: String(c._id),
-      name: c.name,
-      ageMonths: ageInMonths(c.dob),
-      myRole: c.careTeam.find((m) => m.uid === req.dbUser.uid)?.role || req.dbUser.role,
-    })),
-  })
-})
-
 module.exports = {
   listChildren, createChild, getChild, updateChild,
-  getCareTeam, addCareTeamMember, removeCareTeamMember, caseload,
+  getCareTeam, addCareTeamMember, removeCareTeamMember,
   childView,
 }

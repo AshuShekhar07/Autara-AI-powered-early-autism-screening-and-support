@@ -31,6 +31,23 @@ describe('admin verification', () => {
     expect(JSON.stringify(cg)).not.toMatch(/childName|childDob|Demo Child/)
   })
 
+  it('tracks pending / approved / rejected so rejected requests leave the queue', async () => {
+    let pending = await http.get('/api/admin/users?status=pending', 'adm')
+    expect(pending.body.data.users.map((u) => u.uid)).toEqual(['cl1'])
+    expect(pending.body.data.users[0].verificationStatus).toBe('pending')
+
+    await http.patch('/api/admin/users/cl1/verify', 'adm').send({ verified: false })   // reject
+    pending = await http.get('/api/admin/users?status=pending', 'adm')
+    expect(pending.body.data.users).toHaveLength(0)
+    const rejected = await http.get('/api/admin/users?status=rejected', 'adm')
+    expect(rejected.body.data.users.map((u) => u.uid)).toEqual(['cl1'])
+
+    await http.patch('/api/admin/users/cl1/verify', 'adm').send({ verified: true })    // re-approve
+    const approved = await http.get('/api/admin/users?status=approved', 'adm')
+    expect(approved.body.data.users.map((u) => u.uid).sort()).toEqual(['cl1', 'th1'])
+    expect((await http.get('/api/admin/users?status=weird', 'adm')).status).toBe(400)
+  })
+
   it('rejects bad filters', async () => {
     expect((await http.get('/api/admin/users?verified=maybe', 'adm')).status).toBe(400)
     expect((await http.get('/api/admin/users?role[$ne]=x', 'adm')).status).toBe(400)

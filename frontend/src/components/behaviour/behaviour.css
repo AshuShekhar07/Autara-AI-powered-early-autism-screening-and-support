@@ -43,7 +43,8 @@
 .bh-charts { display: flex; flex-direction: column; gap: 14px; }
 .bh-charts__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .bh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.bh-grid > :last-child { grid-column: 1 / -1; }
+.bh-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+.bh-grid--compact > :last-child:nth-child(odd) { grid-column: auto; }
 .bh-chart { padding: 18px; }
 .bh-chart__head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
 .bh-chart__plot { width: 100%; min-width: 0; }
@@ -69,3 +70,4 @@
   .bh-detail-grid { grid-template-columns: 1fr; }
   .bh-card { padding: 16px; }
 }
+.bh-entry.is-jump-target { background: var(--brand-lt); padding-left: 10px; padding-right: 10px; }

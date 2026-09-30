@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useChildren } from '../../context/ChildContext'
+import { useMilestones, MILESTONE_STATUSES } from '../../hooks/useMilestones'
 import './DevelopmentalMilestones.css'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -100,31 +101,20 @@ function getAgeBand(childDob) {
 /**
  * DevelopmentalMilestones
  *
- * Informational section only — NOT a diagnostic tool.
- * Displays five developmental categories with user-driven status tags.
- * Status defaults to 'not_reviewed'; caregivers can update via the milestones page.
- *
- * TODO: Persist category statuses per user via GET/PUT /api/milestones
- * when that endpoint is built. For now, statuses are UI state only.
+ * Informational section only — NOT a diagnostic tool. Five categories with a caregiver-set
+ * status (persisted per child via GET/PUT /api/children/:id/milestones).
  */
 export default function DevelopmentalMilestones() {
-  const { profileData } = useAuth()
-  const childDob  = profileData?.roleDetails?.childDob || null
-  const ageBand   = getAgeBand(childDob)
+  const { activeChild } = useChildren()
+  const ageBand = getAgeBand(activeChild?.dob || null)
+  const { statuses, loading, error, save } = useMilestones(activeChild?.id)
+  const [saveError, setSaveError] = React.useState('')
 
-  // UI-only status state — not persisted yet
-  // TODO: Load from GET /api/milestones and persist via PUT /api/milestones
-  const [statuses, setStatuses] = React.useState(() =>
-    Object.fromEntries(CATEGORIES.map(c => [c.id, 'not_reviewed']))
-  )
-
-  function cycleStatus(id) {
-    const order = ['not_reviewed', 'in_progress', 'reviewed']
-    setStatuses(prev => {
-      const current = prev[id]
-      const next    = order[(order.indexOf(current) + 1) % order.length]
-      return { ...prev, [id]: next }
-    })
+  async function cycleStatus(id) {
+    const current = statuses?.[id] || 'not_reviewed'
+    const next = MILESTONE_STATUSES[(MILESTONE_STATUSES.indexOf(current) + 1) % MILESTONE_STATUSES.length]
+    setSaveError('')
+    try { await save(id, next) } catch (err) { setSaveError(err.message) }
   }
 
   return (
@@ -144,9 +134,11 @@ export default function DevelopmentalMilestones() {
         </Link>
       </div>
 
-      <ul className="ms-list" role="list">
+      {error && <div className="status-box status-box--error" role="alert">Couldn't load milestone statuses: {error}</div>}
+      {saveError && <div className="status-box status-box--error" role="alert">{saveError}</div>}
+      <ul className="ms-list" role="list" aria-busy={loading}>
         {CATEGORIES.map(cat => {
-          const status = statuses[cat.id]
+          const status = statuses?.[cat.id] || 'not_reviewed'
           const cfg    = STATUS_CONFIG[status]
           return (
             <li key={cat.id} className="ms-item">
@@ -158,6 +150,7 @@ export default function DevelopmentalMilestones() {
                 type="button"
                 className={`ms-status ${cfg.className}`}
                 onClick={() => cycleStatus(cat.id)}
+                disabled={!statuses}
                 aria-label={`${cat.label} — status: ${cfg.label}. Click to change.`}
                 title="Click to update status"
               >

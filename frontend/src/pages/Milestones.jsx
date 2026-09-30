@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/dashboard/DashboardLayout'
-import { useAuth } from '../context/AuthContext'
+import { useChildren } from '../context/ChildContext'
 import './Milestones.css'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,8 +129,8 @@ function getRelevantAgeGroup(ageMonths) {
  * All age groups remain accessible.
  */
 export default function Milestones() {
-  const { profileData } = useAuth()
-  const childDob    = profileData?.roleDetails?.childDob || null
+  const { activeChild } = useChildren()
+  const childDob    = activeChild?.dob || null
   const ageMonths   = calcAgeMonths(childDob)
   const relevantGroup = getRelevantAgeGroup(ageMonths)
 

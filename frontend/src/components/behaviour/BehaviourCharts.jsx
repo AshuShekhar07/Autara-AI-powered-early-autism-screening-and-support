@@ -217,8 +217,8 @@ function ConsequenceList({ summary }) {
   )
 }
 
-/** All four charts with a shared period selector. Props: childId, refreshKey */
-export default function BehaviourCharts({ childId, refreshKey = 0 }) {
+/** Charts with a shared period selector. Props: childId, refreshKey, compact (2 charts only, for dashboards) */
+export default function BehaviourCharts({ childId, refreshKey = 0, compact = false }) {
   const [period, setPeriod] = useState('6w')
   const { summary, loading, error, reload } = useBehaviourSummary(childId, period, refreshKey)
   const state = { summary, loading, error, onRetry: reload }
@@ -235,11 +235,11 @@ export default function BehaviourCharts({ childId, refreshKey = 0 }) {
       {summary && summary.totalLogs > 0 && (
         <p className="bh-muted" role="status">{summary.totalLogs} {summary.totalLogs === 1 ? 'entry' : 'entries'} · average intensity {summary.averageIntensity}/5</p>
       )}
-      <div className="bh-grid">
+      <div className={`bh-grid${compact ? " bh-grid--compact" : ""}`}>
         <WeeklyTrendChart {...state} />
         <CategoryBarChart {...state} />
-        <TimeChart {...state} />
-        <TriggerMatrix {...state} />
+        {!compact && <TimeChart {...state} />}
+        {!compact && <TriggerMatrix {...state} />}
       </div>
     </section>
   )

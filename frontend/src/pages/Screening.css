@@ -72,3 +72,7 @@
   .sc-actions .btn { flex: 1; }
   .sc-review__row { flex-direction: column; gap: 6px; }
 }
+
+.sh-list { display: flex; flex-direction: column; }
+.sh-row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 4px; border-bottom: 1px solid var(--border); color: var(--ink); text-decoration: none; }
+.sh-row:hover { background: var(--bg-tint); text-decoration: none; }

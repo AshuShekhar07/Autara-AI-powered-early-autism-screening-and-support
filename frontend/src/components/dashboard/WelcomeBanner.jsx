@@ -9,16 +9,14 @@ import './WelcomeBanner.css'
  * Uses the authenticated user's real name (displayName) or email prefix
  * from AuthContext to personalise the greeting. No placeholder text.
  *
- * The "Start New Screening" CTA links to /screening.
- * That route is built but shows an honest "coming soon" placeholder until
- * the screening flow is implemented.
+ * The "Start New Screening" CTA links to /screening (the M-CHAT-R wizard).
  */
 export default function WelcomeBanner() {
-  const { user } = useAuth()
+  const { user, profileData } = useAuth()
 
   // Derive a friendly first name: prefer displayName, fall back to email prefix
   const firstName = (() => {
-    if (user?.displayName) return user.displayName.trim().split(/\s+/)[0]
+    if (profileData?.name) return profileData.name.trim().split(/\s+/)[0]
     if (user?.email) return user.email.split('@')[0]
     return 'there'
   })()

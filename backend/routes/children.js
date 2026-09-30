@@ -5,6 +5,9 @@ const { childAccess, requireChildOwner } = require('../middleware/childAccess')
 const { CARE_ROLES, CLINICAL_ROLES }     = require('../utils/roles')
 const c = require('../controllers/childController')
 const b = require('../controllers/behaviourController')
+const m = require('../controllers/milestoneController')
+const n = require('../controllers/sessionNoteController')
+const d = require('../controllers/dashboardController')
 
 const router = express.Router()
 
@@ -30,5 +33,19 @@ router.get('/:id/behaviour-logs',             anyChildRole, childAccess(), b.lis
 router.patch('/:id/behaviour-logs/:logId',    logWriter,    childAccess(), b.updateLog)
 router.delete('/:id/behaviour-logs/:logId',   logWriter,    childAccess(), b.deleteLog)
 router.get('/:id/behaviour-summary',          anyChildRole, childAccess(), b.summary)
+
+// ── Milestones (persisted caregiver statuses) ──
+router.get('/:id/milestones', anyChildRole, childAccess(), m.getMilestones)
+router.put('/:id/milestones', careRole, childAccess(), requireChildOwner, m.putMilestones)
+
+// ── Session notes: therapists write, verified professionals read (never caregivers) ──
+const therapistRole = requireRole(['therapist'])
+const clinicalRole  = requireRole(CLINICAL_ROLES)
+router.post('/:id/session-notes', therapistRole, childAccess(), n.createNote)
+router.get('/:id/session-notes',  clinicalRole,  childAccess(), n.listNotes)
+
+// ── Dashboard feeds ──
+router.get('/:id/overview', careRole,      childAccess(), d.overview)
+router.get('/:id/timeline', anyChildRole,  childAccess(), d.timeline)
 
 module.exports = router

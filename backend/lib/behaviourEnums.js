@@ -14,3 +14,11 @@ const CONSEQUENCES = [
 const SETTINGS = ['home', 'school', 'therapy', 'public', 'other']
 
 module.exports = { ANTECEDENTS, BEHAVIOURS, CONSEQUENCES, SETTINGS }
+
+/** Plain-language label for a behaviour category (used in feeds / reports / evidence). */
+const BEHAVIOUR_LABELS = {
+  meltdown_tantrum: 'Meltdown / tantrum', aggression: 'Aggression', self_injury: 'Self-injury',
+  elopement: 'Running off / wandering', repetitive_stimming: 'Repetitive movements (stimming)',
+  withdrawal: 'Withdrawal', vocal_outburst: 'Vocal outburst', other: 'Something else',
+}
+module.exports.behaviourLabelOf = (v) => BEHAVIOUR_LABELS[v] || v

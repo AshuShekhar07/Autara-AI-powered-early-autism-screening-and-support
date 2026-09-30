@@ -8,13 +8,14 @@ const { audit } = require('../lib/audit')
 function userRow(u) {
   const row = { uid: u.uid, name: u.name, email: u.email, role: u.role, verified: u.verified, createdAt: u.createdAt }
   if (isClinicalRole(u.role)) {
+    row.verificationStatus = u.verificationStatus || (u.verified ? 'approved' : 'pending')
     row.orgName = u.roleDetails?.orgName || null
     row.licenseNumber = u.roleDetails?.licenseNumber || null
   }
   return row
 }
 
-/** GET /api/admin/users?role=&verified=&page=&limit= */
+/** GET /api/admin/users?role=&verified=&status=pending|approved|rejected&page=&limit= */
 const listUsers = asyncHandler(async (req, res) => {
   const filter = {}
   if (req.query.role !== undefined) {
@@ -26,6 +27,16 @@ const listUsers = asyncHandler(async (req, res) => {
       throw new AppError(400, 'VALIDATION_ERROR', 'verified must be "true" or "false".')
     }
     filter.verified = req.query.verified === 'true'
+  }
+  if (req.query.status !== undefined) {
+    if (!['pending', 'approved', 'rejected'].includes(req.query.status)) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'status must be pending, approved or rejected.')
+    }
+    // accounts created before this field existed have no status: treat "no status" as pending/approved by `verified`
+    if (req.query.status === 'pending') Object.assign(filter, { verified: false, verificationStatus: { $ne: 'rejected' } })
+    else if (req.query.status === 'approved') filter.verified = true
+    else filter.verificationStatus = 'rejected'
+    filter.role = filter.role || { $in: ['therapist', 'clinician'] }
   }
   const limit = parseLimit(req.query.limit, 50, 200)
   const page = Math.max(1, parseInt(req.query.page, 10) || 1)
@@ -51,6 +62,7 @@ const verifyUser = asyncHandler(async (req, res) => {
   }
 
   user.verified = verified
+  user.verificationStatus = verified ? 'approved' : 'rejected'
   await user.save()
   await audit(req, verified ? 'USER_VERIFIED' : 'USER_VERIFICATION_REVOKED',
     { type: 'user', id: user.uid }, { role: user.role })

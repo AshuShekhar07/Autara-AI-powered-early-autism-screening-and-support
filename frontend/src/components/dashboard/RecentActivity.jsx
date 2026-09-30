@@ -1,59 +1,14 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
+import { useChildren } from '../../context/ChildContext'
+import { useApi } from '../../hooks/useApi'
+import { api } from '../../lib/api'
 import './RecentActivity.css'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Recent activity adapter
-// ─────────────────────────────────────────────────────────────────────────────
-// TODO: Replace getRecentActivity() with:
-//   GET /api/activity
-//   Returns: [{ id, type, label, timestamp }]
-//
-// Possible activity types:
-//   'profile_update' | 'milestone_review' | 'resource_saved' |
-//   'care_team_request' | 'screening_started' | 'report_viewed'
-//
-// In production, use the empty array → shows empty state.
-// Demo data below is ONLY for UI development and is clearly isolated.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const USE_DEMO_DATA = true
-
-function getRecentActivity() {
-  if (!USE_DEMO_DATA) return []
-  const now = Date.now()
-  return [
-    {
-      id:        'act-1',
-      type:      'profile_update',
-      label:     'Child profile updated',
-      timestamp: now - 2 * 60 * 60 * 1000,        // 2 hours ago
-    },
-    {
-      id:        'act-2',
-      type:      'milestone_review',
-      label:     'Developmental milestones reviewed',
-      timestamp: now - 26 * 60 * 60 * 1000,       // yesterday
-    },
-    {
-      id:        'act-3',
-      type:      'resource_saved',
-      label:     'Resource saved',
-      timestamp: new Date('2026-09-12').getTime(), // fixed date
-    },
-    {
-      id:        'act-4',
-      type:      'care_team_request',
-      label:     'Care team request sent',
-      timestamp: new Date('2026-09-10').getTime(),
-    },
-  ]
-}
-
 /** Returns a relative time label and optional exact date string. */
-function formatActivity(ts) {
-  const diffMs   = Date.now() - ts
-  const diffDays = Math.floor(diffMs / 86400000)
-  const date     = new Date(ts)
+function formatActivity(iso) {
+  const date     = new Date(iso)
+  const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000)
 
   if (diffDays === 0) {
     const label = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
@@ -70,6 +25,7 @@ function formatActivity(ts) {
 }
 
 const TYPE_ICONS = {
+  screening: null, review: null, annotation: null, behaviour_log: null, session_note: null,
   profile_update:     (
     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -111,16 +67,19 @@ const TYPE_ICONS = {
   ),
 }
 
+const ICON_FOR = { screening: 'screening_started', review: 'milestone_review', behaviour_log: 'report_viewed', annotation: 'milestone_review', session_note: 'report_viewed' }
+
 /**
- * RecentActivity
- *
- * Vertical timeline of user actions inside Autara.
- * Uses getRecentActivity() adapter — swap to real API when available.
- * Shows empty state when no events exist.
+ * RecentActivity — vertical timeline built from REAL data:
+ * GET /api/children/:id/timeline (screenings, clinician reviews, behaviour logs).
  */
 export default function RecentActivity() {
-  // In production: fetch from GET /api/activity
-  const [activities] = React.useState(getRecentActivity)
+  const { activeChild } = useChildren()
+  const childId = activeChild?.id
+  const { data, loading, error, reload } = useApi(
+    () => api.get(`/api/children/${childId}/timeline`, { limit: 8 }), [childId], !!childId
+  )
+  const activities = data?.events || []
 
   return (
     <section className="ra-section" aria-labelledby="ra-heading">
@@ -128,33 +87,36 @@ export default function RecentActivity() {
         <h2 className="ra-section__title" id="ra-heading">Recent Activity</h2>
       </div>
 
-      {activities.length === 0 ? (
-        /* ── Empty state ── */
+      {loading ? (
+        <div className="ra-empty" role="status" aria-busy="true"><div className="spinner spinner--brand" /></div>
+      ) : error ? (
+        <div className="ra-empty" role="alert">
+          <p className="ra-empty__title">Couldn't load activity</p>
+          <button type="button" className="sc-link-btn" onClick={reload}>Try again</button>
+        </div>
+      ) : activities.length === 0 ? (
         <div className="ra-empty" role="status">
           <div className="ra-empty__icon" aria-hidden="true">
             <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="9"/>
-              <polyline points="12 7 12 12 15 15"/>
+              <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
             </svg>
           </div>
           <p className="ra-empty__title">No recent activity yet</p>
-          <p className="ra-empty__body">
-            Your activity will appear here as you use Autara.
-          </p>
+          <p className="ra-empty__body">Screenings, behaviour logs and clinician reviews will appear here.</p>
         </div>
       ) : (
-        /* ── Activity timeline ── */
         <ol className="ra-timeline" aria-label="Recent activity">
-          {activities.map(act => {
-            const { relative, time } = formatActivity(act.timestamp)
-            const icon = TYPE_ICONS[act.type] || TYPE_ICONS.profile_update
+          {activities.map((act) => {
+            const { relative, time } = formatActivity(act.at)
+            const icon = TYPE_ICONS[ICON_FOR[act.type]] || TYPE_ICONS.profile_update
+            const to = act.ref?.kind === 'screening' ? `/screenings/${act.ref.id}` : act.ref?.kind === 'behaviour_log' ? '/behaviour' : null
             return (
               <li key={act.id} className="ra-event">
                 <span className="ra-event__icon" aria-hidden="true">{icon}</span>
                 <div className="ra-event__body">
-                  <span className="ra-event__label">{act.label}</span>
+                  <span className="ra-event__label">{to ? <Link to={to}>{act.title}</Link> : act.title}</span>
                   <span className="ra-event__time">
-                    {relative}
+                    {act.summary} · {relative}
                     {time && <span className="ra-event__exact">, {time}</span>}
                   </span>
                 </div>

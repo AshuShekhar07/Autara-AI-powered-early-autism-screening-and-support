@@ -5,13 +5,13 @@ import { formatDateTime } from '../../lib/format'
 import { antecedentLabel, behaviourLabel, consequenceLabel, settingLabel } from '../../lib/behaviourCategories'
 import './behaviour.css'
 
-const PAGE = 10
 
 /**
  * Newest-first list of entries with "Load more". Authors can delete their own entries.
- * Props: childId, refreshKey (bump to reload after a new entry)
+ * Props: childId, refreshKey (bump to reload after a new entry), pageSize, canEdit (author delete; default true)
+ * Each entry has id="log-<id>" so AI-insight evidence links can jump straight to it.
  */
-export default function BehaviourHistory({ childId, refreshKey = 0 }) {
+export default function BehaviourHistory({ childId, refreshKey = 0, pageSize = 10, canEdit = true }) {
   const { user } = useAuth()
   const [logs, setLogs] = useState(null)
   const [next, setNext] = useState(null)
@@ -22,12 +22,12 @@ export default function BehaviourHistory({ childId, refreshKey = 0 }) {
   const load = useCallback(async (before) => {
     setBusy(true); setError('')
     try {
-      const data = await api.get(`/api/children/${childId}/behaviour-logs`, { limit: PAGE, before })
+      const data = await api.get(`/api/children/${childId}/behaviour-logs`, { limit: pageSize, before })
       setLogs((prev) => (before && prev ? [...prev, ...data.logs] : data.logs))
       setNext(data.nextBefore)
     } catch (err) { setError(err.message) }
     setBusy(false)
-  }, [childId])
+  }, [childId, pageSize])
 
   useEffect(() => { setLogs(null); load() }, [load, refreshKey])
 
@@ -50,7 +50,7 @@ export default function BehaviourHistory({ childId, refreshKey = 0 }) {
       {logs && logs.length > 0 && (
         <ul className="bh-list">
           {logs.map((l) => (
-            <li key={l.id} className="bh-entry">
+            <li key={l.id} id={`log-${l.id}`} className="bh-entry">
               <div className="bh-entry__top">
                 <strong>{behaviourLabel(l.behaviour.category)}</strong>
                 <span className="bh-pill">Intensity {l.intensity}/5</span>
@@ -63,7 +63,7 @@ export default function BehaviourHistory({ childId, refreshKey = 0 }) {
               <p className="bh-muted bh-entry__meta">
                 {formatDateTime(l.occurredAt)} · {settingLabel(l.setting)}
                 {l.durationMinutes ? ` · ${l.durationMinutes} min` : ''} · by {l.loggedByRole}
-                {l.loggedBy === user?.uid && (
+                {canEdit && l.loggedBy === user?.uid && (
                   confirmId === l.id
                     ? <> · <button type="button" className="sc-link-btn bh-danger" onClick={() => remove(l.id)}>Confirm delete</button>{' '}
                         <button type="button" className="sc-link-btn" onClick={() => setConfirmId(null)}>Cancel</button></>

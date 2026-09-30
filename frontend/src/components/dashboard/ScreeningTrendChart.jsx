@@ -4,18 +4,13 @@ import './Charts.css'
 /**
  * ScreeningTrendChart
  *
- * Reusable SVG line chart showing screening scores over time.
+ * SVG line chart of the M-CHAT-R score (number of flagged answers, 0–20) across screenings.
+ * The y-axis is always 0–20 with the official tier boundaries marked (3 = medium, 8 = high),
+ * so the line is never stretched to look more dramatic than it is.
  *
- * Props:
- *   data — array of { date: string (ISO or display), score: number (0–100) }
- *
- * TODO: replace with real data from GET /api/screenings once built.
- * The API should return an array of screening results sorted by date ascending.
- * Map each result to { date: result.completedAt, score: result.totalScore }.
- *
- * When `data` is empty or not provided, an honest empty state is shown.
+ * Props: data — [{ date: ISO string, score: 0–20, tier }] ascending by date; loading; error
  */
-export default function ScreeningTrendChart({ data = [] }) {
+export default function ScreeningTrendChart({ data = [], loading = false, error = '' }) {
   const hasData = Array.isArray(data) && data.length > 0
 
   return (
@@ -23,16 +18,20 @@ export default function ScreeningTrendChart({ data = [] }) {
       <div className="db-card__header">
         <div>
           <h2 className="db-card__title">Score Trend</h2>
-          <p className="db-card__subtitle">How screening scores have changed over time</p>
+          <p className="db-card__subtitle">Flagged answers per screening (0–20). Lower is fewer flags.</p>
         </div>
       </div>
       <div className="db-card__body">
-        {hasData ? (
+        {loading ? (
+          <div className="chart-empty" role="status" aria-busy="true"><div className="spinner spinner--brand" /></div>
+        ) : error ? (
+          <EmptyChart title="Couldn't load this chart" body={error} role="alert" />
+        ) : hasData ? (
           <TrendChart data={data} />
         ) : (
           <EmptyChart
             title="No trend data yet"
-            body="Complete your first screening to see how your child's scores change over time."
+            body="After your first screening, you'll see how the number of flagged answers changes over time."
           />
         )}
       </div>
@@ -41,9 +40,9 @@ export default function ScreeningTrendChart({ data = [] }) {
 }
 
 /* ── Empty state ── */
-function EmptyChart({ title, body }) {
+function EmptyChart({ title, body, role = 'status' }) {
   return (
-    <div className="chart-empty" role="status" aria-label={title}>
+    <div className="chart-empty" role={role} aria-label={title}>
       <div className="chart-empty__icon" aria-hidden="true">
         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -56,63 +55,42 @@ function EmptyChart({ title, body }) {
 }
 
 /* ── SVG trend line (used when data exists) ── */
+const fmt = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+
 function TrendChart({ data }) {
   const W = 560
-  const H = 180
-  const PAD = { top: 16, right: 16, bottom: 28, left: 28 }
+  const H = 200
+  const PAD = { top: 16, right: 40, bottom: 30, left: 28 }
   const innerW = W - PAD.left - PAD.right
   const innerH = H - PAD.top  - PAD.bottom
+  const MAX = 20
 
-  const minScore = Math.min(...data.map(d => d.score))
-  const maxScore = Math.max(...data.map(d => d.score))
-  const scoreRange = maxScore - minScore || 1
-
-  function xOf(i) { return PAD.left + (i / (data.length - 1)) * innerW }
-  function yOf(s) { return PAD.top  + (1 - (s - minScore) / scoreRange) * innerH }
+  const xOf = (i) => PAD.left + (data.length === 1 ? innerW / 2 : (i / (data.length - 1)) * innerW)
+  const yOf = (s) => PAD.top + (1 - s / MAX) * innerH
 
   const pts = data.map((d, i) => `${xOf(i)},${yOf(d.score)}`).join(' ')
-  const areaPath = [
-    `M ${xOf(0)} ${yOf(data[0].score)}`,
-    ...data.map((d, i) => `L ${xOf(i)} ${yOf(d.score)}`),
-    `L ${xOf(data.length - 1)} ${PAD.top + innerH}`,
-    `L ${xOf(0)} ${PAD.top + innerH}`,
-    'Z',
-  ].join(' ')
+  const summary = data.map((d) => `${fmt(d.date)}: ${d.score} flagged`).join('; ')
 
   return (
     <div className="trend-chart__svg-wrap">
-      <svg
-        className="trend-chart__svg"
-        viewBox={`0 0 ${W} ${H}`}
-        aria-label="Line chart of screening scores over time"
-        role="img"
-      >
-        <defs>
-          <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#2F6F62" stopOpacity=".18"/>
-            <stop offset="100%" stopColor="#2F6F62" stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        <path className="trend-area" d={areaPath} />
-        <polyline className="trend-line" points={pts} />
-        {data.map((d, i) => (
-          <circle
-            key={i}
-            className="trend-dot"
-            cx={xOf(i)} cy={yOf(d.score)} r={4}
-            aria-label={`${d.date}: score ${d.score}`}
-          />
+      <svg className="trend-chart__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Line chart of flagged answers per screening. ${summary}`}>
+        {/* tier boundaries */}
+        {[[3, 'Medium ≥3'], [8, 'High ≥8']].map(([v, label]) => (
+          <g key={v}>
+            <line x1={PAD.left} x2={W - PAD.right} y1={yOf(v)} y2={yOf(v)} stroke="#E0E6DE" strokeWidth="1" />
+            <text className="trend-axis-label" x={W - PAD.right + 4} y={yOf(v) + 3}>{label}</text>
+          </g>
         ))}
-        {/* X-axis labels */}
+        <line x1={PAD.left} x2={W - PAD.right} y1={yOf(0)} y2={yOf(0)} stroke="#CDD6CB" strokeWidth="1" />
+        {data.length > 1 && <polyline className="trend-line" points={pts} />}
         {data.map((d, i) => (
-          <text
-            key={`lbl-${i}`}
-            className="trend-axis-label"
-            x={xOf(i)} y={H - 6}
-            textAnchor="middle"
-          >
-            {d.date}
-          </text>
+          <g key={d.id || i}>
+            <circle className="trend-dot" cx={xOf(i)} cy={yOf(d.score)} r={5}>
+              <title>{`${fmt(d.date)}: ${d.score} of 20 answers flagged`}</title>
+            </circle>
+            <text className="trend-axis-label" x={xOf(i)} y={yOf(d.score) - 10} textAnchor="middle">{d.score}</text>
+            <text className="trend-axis-label" x={xOf(i)} y={H - 8} textAnchor="middle">{fmt(d.date)}</text>
+          </g>
         ))}
       </svg>
     </div>

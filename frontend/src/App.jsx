@@ -6,9 +6,14 @@ import ProtectedRoute      from './components/auth/ProtectedRoute'
 import AuthPage            from './pages/auth/AuthPage'
 import Dashboard           from './pages/Dashboard'
 import ClinicianDashboard  from './pages/ClinicianDashboard'
+import TherapistDashboard  from './pages/clinical/TherapistDashboard'
+import ChildWorkspace      from './pages/clinical/ChildWorkspace'
+import CasePage            from './pages/clinical/CasePage'
+import AdminDashboard      from './pages/admin/AdminDashboard'
 import Screening           from './pages/Screening'
 import ScreeningResult     from './pages/ScreeningResult'
 import Behaviour           from './pages/Behaviour'
+import History             from './pages/History'
 import NotAuthorized       from './pages/NotAuthorized'
 import ChildProfile        from './pages/ChildProfile'
 import Milestones          from './pages/Milestones'
@@ -75,6 +80,15 @@ export default function App() {
           />
 
           <Route
+            path="/history"
+            element={
+              <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
+                <History />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/screenings/:id"
             element={
               <ProtectedRoute allowedRoles={['caregiver', 'patient']}>
@@ -84,24 +98,15 @@ export default function App() {
           />
 
           {/* ── Protected: therapist (verified) ── */}
-          <Route
-            path="/therapist"
-            element={
-              <ProtectedRoute allowedRoles={['therapist']}>
-                <ClinicianDashboard />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/therapist" element={<ProtectedRoute allowedRoles={['therapist']}><TherapistDashboard /></ProtectedRoute>} />
+          <Route path="/therapist/children/:id" element={<ProtectedRoute allowedRoles={['therapist']}><ChildWorkspace /></ProtectedRoute>} />
+          <Route path="/therapist/cases/:screeningId" element={<ProtectedRoute allowedRoles={['therapist']}><CasePage /></ProtectedRoute>} />
 
           {/* ── Protected: clinician (verified) ── */}
-          <Route
-            path="/clinician"
-            element={
-              <ProtectedRoute allowedRoles={['clinician']}>
-                <ClinicianDashboard />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/clinician" element={<ProtectedRoute allowedRoles={['clinician']}><ClinicianDashboard /></ProtectedRoute>} />
+          <Route path="/clinician/caseload" element={<ProtectedRoute allowedRoles={['clinician']}><ClinicianDashboard caseloadOnly /></ProtectedRoute>} />
+          <Route path="/clinician/children/:id" element={<ProtectedRoute allowedRoles={['clinician']}><ChildWorkspace /></ProtectedRoute>} />
+          <Route path="/clinician/cases/:screeningId" element={<ProtectedRoute allowedRoles={['clinician']}><CasePage /></ProtectedRoute>} />
 
           {/* ── Unverified therapist / clinician ── */}
           <Route
@@ -116,18 +121,8 @@ export default function App() {
           {/* Old path → role home */}
           <Route path="/clinician-dashboard" element={<RootRedirect />} />
 
-          {/* ── Protected: admin (stub) ── */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <div className="stub-page">
-                  <h1>Admin Console</h1>
-                  <p>Admin workspace coming soon.</p>
-                </div>
-              </ProtectedRoute>
-            }
-          />
+          {/* ── Protected: admin ── */}
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
 
           {/* ── Error pages ── */}
           <Route path="/not-authorized" element={<NotAuthorized />} />
