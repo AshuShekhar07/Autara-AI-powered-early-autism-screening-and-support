@@ -75,3 +75,17 @@ Each phase ends with: tests/build run, commit (`feat(scope): …`), 5–10 line 
 ## Out of scope / needs the team
 Gemini API key, approved reference documents for the RAG corpus, and (optionally) a real training dataset.
 See the final summary and `docs/DECISIONS.md`.
+
+## Status (end of implementation)
+
+| Phase | State |
+| --- | --- |
+| 1 Foundations | ✅ done |
+| 2 Screening (M-CHAT-R) | ✅ done — ⚠ item wording unverified (see D-013) |
+| 3 ABC behaviour tracking | ✅ done |
+| 4 Role dashboards | ✅ done |
+| 5 RAG + Ask Autara | ✅ built and tested with a mocked LLM; needs a Gemini key + approved documents to exercise for real |
+| 6 Reports + analytics | ✅ done |
+| 7 Quality, demo data, docs | ✅ done — Docker and real-MongoDB CI not run in the authoring sandbox (D-050, D-053) |
+
+Planned/stubbed items are listed at the bottom of `docs/API.md`.

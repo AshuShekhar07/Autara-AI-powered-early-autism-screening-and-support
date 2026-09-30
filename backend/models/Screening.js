@@ -69,6 +69,9 @@ const screeningSchema = new mongoose.Schema(
       },
       reviewedAt: { type: Date, default: null },
     },
+
+    /** Set only by `npm run seed:demo` (synthetic rows) so a re-run can replace them in place. */
+    demoTag: { type: String, default: undefined },
   },
   { timestamps: true }
 )

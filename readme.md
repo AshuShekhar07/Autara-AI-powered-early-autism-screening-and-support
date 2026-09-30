@@ -1,156 +1,162 @@
-# AI Autism Diagnosis Assistant
+# Autara — AI-assisted early autism screening & behaviour support
 
-> **Responsible, Explainable AI for Early ASD Screening & Behavioral Support**
+> **Responsible, explainable AI for early screening support — a screening aid, not a diagnosis.**
 
 [![Track: Generative AI](https://img.shields.io/badge/Track-Generative%20AI-blue.svg)](https://github.com/)
 [![Domain: HealthTech](https://img.shields.io/badge/Domain-HealthTech-green.svg)](https://github.com/)
-[![Role: Human--in--the--Loop](https://img.shields.io/badge/Clinical%20Safety-Human--in--the--Loop-orange.svg)](https://github.com/)
+[![Clinical Safety: Human-in-the-loop](https://img.shields.io/badge/Clinical%20Safety-Human--in--the--loop-orange.svg)](https://github.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
+> ⚠️ **Important clinical & responsible-AI disclaimer.**
+> Autara is a **screening-support** system. It never produces a diagnosis or an "autism level". It outputs a **risk tier** that says whether a professional evaluation is recommended, and every result, insight and report carries the line
+> *"This is a screening aid, not a diagnosis. Please discuss results with a qualified clinician."*
+> A qualified clinician is always the final authority: they can annotate and override, and caregivers only see AI-written insights **after** a clinician has approved them.
+> **Use only synthetic / demo data.** Autara is an academic project, not a certified medical device.
 
-## 📌 Executive Summary
+## Team
 
-The **AI Autism Diagnosis Assistant** is an AI-assisted screening and behavior-support platform designed to support early detection of Autism Spectrum Disorder (ASD), track day-to-day behavioral patterns, and translate complex data into clear, explainable insights for clinicians, therapists, caregivers, and administrators.
+* **Ashu Shekhar** (`PST-25-022`) · **Shivam Mishra** (`PST-25-0149`)
+* Track: Generative AI · Domain: HealthTech · Users: caregivers, therapists, clinicians, admins
 
-> ⚠️ **Important Clinical & Responsible AI Disclaimer:**
-> This platform is intentionally built as a **screening-support system**, NOT a diagnostic authority. It flags risk scores, correlates behavioral patterns, and generates evidence-backed insights to assist clinical evaluation. **A qualified clinician remains fully responsible for final diagnostic decisions.**
+## What it does
 
----
+| Role | What they can do |
+| --- | --- |
+| **Caregiver / patient** | Complete the M-CHAT-R screening (16–30 months) and see a plain-language result that shows *which answers* contributed · log behaviours (ABC: antecedent–behaviour–consequence) and see trends · add a verified therapist/clinician to the child's care team · read clinician-approved summaries · ask general questions ("Ask Autara") answered only from approved sources · download reviewed reports (PDF/CSV) |
+| **Therapist** | Caseload list · log ABC entries and see trigger charts · write session notes · read screenings and approved insights (read-only) |
+| **Clinician** | Review queue (highest risk first) · case page with all 20 answers, behaviour summary and timeline · generate an evidence-linked **AI insight** (jump from a claim to the exact answer/log, see sources and uncertainty) · annotate · override the risk tier with a required reason · mark reviewed · approve the family-facing summary · export PDF/CSV |
+| **Admin** | Verify (approve/reject) professionals · user list · anonymised analytics (counts below 5 are hidden) — never individual children's data |
 
-## 👥 Project Identity & Team
-
-* **Track:** Generative AI
-* **Domain:** HealthTech — Autism Screening & Behavioral Support
-* **Team Members:**
-  * **Ashu Shekhar** (`PST-25-022`)
-  * **Shivam Mishra** (`PST-25-0149`)
-* **Skill Level:** Intermediate
-* **Primary Target Users:** Clinicians, Therapists, Caregivers, System Admins
-
----
-
-## 🔄 Core Product Flow
+## Architecture
 
 ```
-[ Screening Questionnaire (M-CHAT-R) / ABC Behavior Log ]
-                         │
-                         ▼
-             [ Upload & Data Validation ]
-                         │
-                         ▼
-          [ Role-Based Authentication (RBAC) ]
-                         │
-                         ▼
-     [ AI Classification Model & Risk Scoring ]
-                         │
-                         ▼
-        [ Behavioral Trend Aggregation (ABC) ]
-                         │
-                         ▼
-   [ LLM-Assisted Plain-Language Insight Generation ]
-                         │
-                         ▼
-          [ Clinical Dashboard Presentation ]
-                         │
-                         ▼
-    [ Clinician Review / Override / Annotation ]
-                         │
-                         ▼
-            [ Report Export (PDF / CSV) ]
+React (Vite :3000) ──► Node/Express API (:4000) ──► MongoDB
+                              │
+                              └──► FastAPI AI service (:8000, internal only, X-Internal-Key)
+                                     ├─ POST /screen     M-CHAT-R scoring (+ optional ML probability)
+                                     ├─ POST /insights   RAG + LLM insight, validated (evidence, sources, banned phrases)
+                                     ├─ POST /ask        RAG Q&A with guardrails
+                                     └─ POST /ingest     build the vector index (also a CLI)
 ```
 
----
+**Stack:** MongoDB · Node.js/Express (CommonJS) · FastAPI (Python 3.11) · React 18 + Vite (plain CSS, Recharts) · Firebase Authentication · Google Gemini (behind a small provider interface) · ChromaDB. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## ✨ Features & Functional Breakdown
+## Quick start
 
-### 🎯 Minimum Viable Product (MVP)
+### Prerequisites
+Node 20+ (22 recommended), Python 3.11+, a MongoDB instance (local or Atlas), a Firebase project with **Email/Password** sign-in enabled, and — optionally — a [Gemini API key](https://aistudio.google.com/apikey) for insights / Ask Autara / embeddings.
 
-1. **Role-Based Authentication & Authorization (RBAC):** Secure access control tailored for Clinicians, Therapists, Caregivers, and Admins.
-2. **M-CHAT-R Style Screening Questionnaire:** Standardized early screening tool with automated scoring logic.
-3. **AI Classification Model:** Risk scoring engine that outputs overall risk levels with flagged focus areas.
-4. **Structured ABC Behavior Logging:** Antecedent-Behavior-Consequence (ABC) logging tool for tracking environmental triggers and outcomes over time.
-5. **Diagnosis & Insights Dashboard:** Interactive visualization of behavioral trends, frequency distributions, and trigger correlations.
-6. **REST API:** Fully documented endpoints covering all core screening, logging, and reporting operations.
-7. **Report Generation & Export:** Downloadable PDF and CSV clinical summaries.
-8. **Admin Analytics Panel:** Aggregated, anonymized system-wide trends and usage statistics.
-
-### 🌟 Extended & Future Scope (Prioritized)
-
-* **LLM Trigger-Correlation Insights:** Deep text analysis linking behavior antecedents to specific environmental triggers.
-* **Explainable Screening Scores:** Traceable score provenance linking flagged risks directly back to exact questionnaire responses or log entries.
-* **Pattern-Based Push Notifications:** Automated alerts when behavioral frequency spikes occur.
-* **Shared Clinician-Caregiver Timeline:** Unified chronological history of medical events, screenings, and behavioral logs.
-* **Dark Mode & Plain-Language Toggle:** Accessible UI customization for caregiver clarity and low-light clinical environments.
-
----
-
-## 📊 Product State Machine
-
-Every screening record flows through a strictly tracked lifecycle to maintain clinical workflow integrity:
-
-```
-[ DRAFT ] ────────► [ SCREENING_SUBMITTED ] ────────► [ PROCESSING ]
-                                                             │
-                                             ┌───────────────┴───────────────┐
-                                             ▼                               ▼
-                                   [ INSIGHTS_READY ]              [ PROCESSING_FAILED ]
-                                             │
-                                             ▼
-                              [ UNDER_CLINICAL_REVIEW ]
-                                             │
-                                             ▼
-                                       [ REVIEWED ]
+### 1. Backend (`:4000`)
+```bash
+cd backend
+cp .env.example .env        # fill in MONGODB_URI, Firebase Admin credentials, AI_SERVICE_KEY, ALLOWED_ORIGINS
+npm install
+npm run dev
 ```
 
----
+### 2. AI service (`:8000`, internal)
+```bash
+cd ai-service
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # AI_SERVICE_KEY (same value as the backend), GEMINI_API_KEY (optional)
+python -m app               # binds to 127.0.0.1:8000
+```
+Screening works without a Gemini key; insights fail gracefully and Ask Autara says it is unavailable. Details: [`ai-service/README.md`](ai-service/README.md).
 
-## 💡 Core Design & Responsible AI Principles
+### 3. Frontend (`:3000`)
+```bash
+cd frontend
+cp .env.example .env        # Firebase web config (leave VITE_API_BASE_URL empty in dev — Vite proxies /api)
+npm install
+npm run dev
+```
 
-1. **Evidence Before Explanation:** Every AI insight must be tied to explicit questionnaire inputs or verified behavior logs.
-2. **Human-in-the-Loop:** Professional clinical judgment is non-negotiable; clinicians can annotate, adjust, or override AI screening flags.
-3. **Explicit Uncertainty:** Risk scores and LLM outputs prominently state confidence levels and data limitations.
-4. **No Autonomous Claims:** Strictly no unsupported or independent diagnostic labeling.
-5. **Traceability:** Full provenance for every AI output down to specific inputs and model context.
+### Or with Docker (Mongo + backend + AI service)
+```bash
+cp .env.example .env                  # AI_SERVICE_KEY, GEMINI_API_KEY
+cp backend/.env.example backend/.env  # Firebase Admin credentials
+docker compose up --build             # then: cd frontend && npm run dev
+```
+The AI service port is not published to the host; only the backend can reach it.
 
----
+### Environment variables
 
-## 🚫 Scope Boundaries & Constraints
+| File | Variable | Purpose |
+| --- | --- | --- |
+| `backend/.env` | `MONGODB_URI` | MongoDB connection string |
+| | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` | Firebase Admin credentials (verify ID tokens) |
+| | `ALLOWED_ORIGINS` | CORS allow-list (default `http://localhost:3000`) |
+| | `AI_SERVICE_URL`, `AI_SERVICE_KEY` | Where the AI service is + the shared secret |
+| | `ASK_RATE_LIMIT_PER_HOUR` | Ask Autara limit per user (default 20) |
+| `ai-service/.env` | `AI_SERVICE_KEY` | Must equal the backend's value |
+| | `GEMINI_API_KEY`, `LLM_MODEL`, `EMBEDDING_MODEL` | LLM provider and models (check current names at ai.google.dev) |
+| | `RAG_TOP_K`, `RAG_MIN_SIMILARITY` | Retrieval settings |
+| `frontend/.env` | `VITE_FIREBASE_*` | Firebase web SDK config |
+| | `VITE_API_BASE_URL` | Empty in dev (proxy); set for a separately hosted build |
+| root `.env` | `AI_SERVICE_KEY`, `GEMINI_API_KEY` | Used by `docker-compose.yml` |
 
-To ensure safety, responsible AI practice, and realistic project delivery:
+### Admin account and demo data
+Sign-up deliberately cannot create admins. Sign up normally, then promote:
+```bash
+cd backend
+npm run seed:admin -- you@example.com
+```
+After signing up a caregiver, a therapist and a clinician (three emails), attach **synthetic** demo data (idempotent):
+```bash
+npm run seed:demo -- --caregiver cg@example.com --therapist th@example.com --clinician cl@example.com
+```
+This creates two demo children, one screening per risk tier (one waiting in the clinician's queue), ~60 behaviour logs over six weeks with realistic patterns, session notes and care-team links, and verifies the two professionals.
 
-* **No Autonomous Diagnosis:** The platform never outputs a standalone diagnostic verdict.
-* **No Production Clinical Deployment / Real PII:** Built for demonstration and simulated datasets; no production EHR integrations.
-* **No Pre-trained LLM from Scratch:** Utilizes foundation models via standard API fine-tuning/prompt engineering.
-* **No Regulatory Claims:** Not certified as a FDA/CE medical device software.
+### Tests
+```bash
+cd backend    && npm test        # Jest + supertest (mongodb-memory-server, or TEST_MONGODB_URI=mongodb://127.0.0.1:27017)
+cd ai-service && python -m pytest
+cd frontend   && npm test && npm run build
+```
+CI runs all three on every push and pull request (`.github/workflows/ci.yml`).
 
----
+## Demo walkthrough
 
-## 📜 User Stories Summary
+1. **Caregiver** signs up (child name + date of birth, 16–30 months) → *New Screening* → 20 yes/no questions → result page: tier in plain words, recommended next step, **which answers contributed**, disclaimer.
+2. **Caregiver** logs a few behaviours (*Behaviour log*), sees trends, and adds the clinician to the **care team** by email.
+3. **Admin** (promoted with `seed:admin`) opens `/admin`, approves the new clinician/therapist (org + licence shown).
+4. **Clinician** opens the **review queue** → case page: flagged answers highlighted, behaviour summary, timeline → **Generate AI insight** (evidence links jump to the exact answer or log; sources; uncertainty) → annotate → **override** the tier with a reason → **approve** the insight → **mark reviewed** → **export PDF**.
+5. **Caregiver** now sees the reviewed result (including the clinician's reason) and the approved plain-language summary, downloads the report, and asks **Ask Autara** a question.
+6. **Therapist** logs sessions, writes notes and sees trigger charts (read-only on screenings).
+7. **Admin** views anonymised analytics.
 
-| ID | As a... | I want to... | So that... |
-| :--- | :--- | :--- | :--- |
-| **US-001** | Caregiver | Complete an M-CHAT-R questionnaire | Early signs of ASD are flagged for clinical review |
-| **US-002** | Caregiver / Therapist | Log ABC behavior events | Triggers and behavioral patterns are tracked over time |
-| **US-003** | Clinician | View flagged areas linked to exact inputs | I can audit and verify the underlying AI risk score |
-| **US-004** | Clinician | Access behavioral trend charts | I can evaluate trigger frequencies across time intervals |
-| **US-005** | Clinician | Receive plain-language AI insights | I quickly grasp complex behavioral data trends |
-| **US-006** | Clinician | Annotate or override screening results | Clinical judgment remains the final authority |
-| **US-007** | Admin / Auditor | Maintain full workflow audit logs | All actions and decisions remain traceable |
+## Responsible-AI design
 
----
+1. **Evidence before explanation** — every AI claim cites evidence IDs (answers / behaviour logs) and, when available, reference sources; a validator rejects anything that cites data that isn't in the evidence.
+2. **Human in the loop** — clinicians annotate, override (reason required, both values stored, audited) and approve; caregivers never see AI text before approval.
+3. **Explicit uncertainty** — every insight has a mandatory uncertainty statement.
+4. **No diagnosis, ever** — banned-phrase validator (diagnosis / autism level / "confirms…"), guardrails on Ask Autara (urgent safety → emergency services, medication/dosing refused, no severity levels), fixed disclaimer everywhere.
+5. **Traceability** — model, prompt version, retrieved chunk IDs and an audit log for sensitive actions.
+6. **Privacy** — minimal, name-free evidence goes to the LLM; reports show initials only; admin analytics are k-anonymous; synthetic data only.
 
-## 🛠 Tech Stack (Suggested Implementation)
+## What the team must provide
 
-* **Frontend:** React.js / Next.js, Tailwind CSS, Recharts / Chart.js
-* **Backend:** Python (FastAPI / Django) or Node.js (Express)
-* **AI & Analytics:** OpenAI API / Anthropic Claude API (LLM Insights), Scikit-Learn / PyTorch (Risk Classification Model)
-* **Database:** PostgreSQL (Relational Data & Audit Logs), Redis (Caching/Queue)
-* **Reporting:** WeasyPrint / ReportLab (PDF Generation), Pandas (CSV Export)
-* **API Spec:** OpenAPI 3.0 / Swagger UI
+* **Gemini API key** (and confirm the model names in `.env.example`) — for insights, Ask Autara and embeddings.
+* **Approved reference documents** for the RAG corpus (`ai-service/knowledge/` + `sources.yaml`). Autara ships **no** clinical reference content.
+* **Verify the M-CHAT-R item wording** against the official instrument (`ai-service/app/screening/mchatr.py`, flag `ITEMS_VERIFIED_AGAINST_SOURCE`) — the UI shows a development notice until you do.
+* *(Optional)* a training dataset for the ML probability (`ai-service/data/README.md`) — never synthetic data presented as real.
+* Firebase project + MongoDB instance.
 
----
+## Repository layout
 
-## 📄 License
+```
+backend/       Node/Express API (routes, controllers, models, middleware, lib, scripts, tests)
+frontend/      React + Vite app (pages, components, hooks, context, lib)
+ai-service/    FastAPI service (screening, RAG, insights, assistant, ml, eval, prompts, tests)
+docs/          API.md · ARCHITECTURE.md · DECISIONS.md · MODEL_CARD.md · IMPLEMENTATION_PLAN.md
+```
 
-This project is developed under the **MIT License** for academic and research purposes.
+## Scope boundaries
+
+* No autonomous diagnosis; no regulatory claims (not an FDA/CE device); demonstration and simulated data only.
+* No LLM is trained from scratch — foundation models are used through prompts + retrieval.
+
+## License
+
+MIT, for academic and research purposes. The M-CHAT-R is © 2009 Diana Robins, Deborah Fein & Marianne Barton and is free for clinical, research and educational use but must not be reworded.

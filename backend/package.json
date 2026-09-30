@@ -8,7 +8,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed:admin": "node scripts/seedAdmin.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "seed:demo": "node scripts/seedDemo.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

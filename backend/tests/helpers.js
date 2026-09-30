@@ -5,6 +5,7 @@ const User = require('../models/User')
 const Child = require('../models/Child')
 
 let memoryServer = null
+let currentUri = null
 
 /**
  * Connects to a throw-away database.
@@ -21,7 +22,8 @@ async function connectTestDb() {
   }
   const url = new URL(uri)
   url.pathname = `/${dbName}`
-  await mongoose.connect(url.toString())
+  currentUri = url.toString()
+  await mongoose.connect(currentUri)
   return dbName
 }
 
@@ -74,4 +76,4 @@ async function makeChild(caregiverUid, { name = 'Synthetic Child', ageMonths = 2
   return Child.create({ caregiverUid, name, dob: new Date(dobForAge(ageMonths)), careTeam })
 }
 
-module.exports = { connectTestDb, disconnectTestDb, clearDb, bearer, api, makeUser, makeChild, dobForAge }
+module.exports = { testDbUri: () => currentUri, connectTestDb, disconnectTestDb, clearDb, bearer, api, makeUser, makeChild, dobForAge }

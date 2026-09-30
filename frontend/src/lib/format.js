@@ -20,8 +20,9 @@ export function formatDateTime(iso) {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
+/** Up to two initials from the alphabetic words of a name ("River (demo)" → "R", "Sam Demo" → "SD"). */
 export function initialsOf(name) {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/)
-  return (parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase()
+  const words = String(name || '').match(/\p{L}[\p{L}'’-]*/gu) || []
+  if (!words.length) return '?'
+  return (words.length >= 2 ? words[0][0] + words[words.length - 1][0] : words[0].slice(0, 2)).toUpperCase()
 }

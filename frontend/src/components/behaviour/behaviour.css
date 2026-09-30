@@ -54,7 +54,7 @@
 .bh-seg button + button { border-left: 1px solid var(--border-md); }
 .bh-seg button.on { background: var(--brand); color: #fff; font-weight: 600; }
 .bh-tip { background: var(--bg-card); border: 1px solid var(--border-md); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; font-size: .8rem; color: var(--ink); }
-.bh-tablewrap { overflow-x: auto; max-width: 100%; }
+.bh-tablewrap { overflow-x: auto; max-width: 100%; position: relative; }
 .bh-table { border-collapse: collapse; width: 100%; font-size: .8rem; }
 .bh-table th, .bh-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
 .bh-table thead th { font-weight: 600; color: var(--ink-secondary); font-size: .74rem; }

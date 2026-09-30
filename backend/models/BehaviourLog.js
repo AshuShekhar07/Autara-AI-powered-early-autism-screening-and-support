@@ -27,6 +27,9 @@ const behaviourLogSchema = new mongoose.Schema(
       weekday:   { type: Number },
       weekStart: { type: String },
     },
+
+    /** Set only by `npm run seed:demo` (synthetic rows) so a re-run can replace them in place. */
+    demoTag: { type: String, default: undefined },
   },
   { timestamps: true }
 )

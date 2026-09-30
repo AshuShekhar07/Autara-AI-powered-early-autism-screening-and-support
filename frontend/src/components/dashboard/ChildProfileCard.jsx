@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { initialsOf } from '../../lib/format'
 import { useChildren } from '../../context/ChildContext'
 import './ChildProfileCard.css'
 
@@ -33,18 +34,7 @@ function formatDate(iso) {
 
 /** Avatar initials derived from a name string. */
 function ChildAvatar({ name }) {
-  const initials = (() => {
-    if (!name) return '?'
-    const parts = name.trim().split(/\s+/)
-    return parts.length >= 2
-      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-      : parts[0].slice(0, 2).toUpperCase()
-  })()
-  return (
-    <div className="cp-avatar" aria-hidden="true">
-      {initials}
-    </div>
-  )
+  return <div className="cp-avatar" aria-hidden="true">{initialsOf(name)}</div>
 }
 
 /**

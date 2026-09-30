@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/dashboard/DashboardLayout'
+import { initialsOf } from '../lib/format'
 import { useChildren } from '../context/ChildContext'
 import ChildSwitcher from '../components/ChildSwitcher'
 import { api } from '../lib/api'
@@ -33,22 +34,8 @@ function formatDate(iso) {
 }
 
 function ChildAvatar({ name }) {
-  const initials = (() => {
-    if (!name) return '?'
-    const parts = name.trim().split(/\s+/)
-    return parts.length >= 2
-      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-      : parts[0].slice(0, 2).toUpperCase()
-  })()
-  return <div className="cppage-avatar">{initials}</div>
+  return <div className="cppage-avatar" aria-hidden="true">{initialsOf(name)}</div>
 }
-
-const SEX_OPTIONS = [
-  { value: '', label: 'Prefer not to say' },
-  { value: 'female', label: 'Female' },
-  { value: 'male', label: 'Male' },
-  { value: 'other', label: 'Other' },
-]
 
 /** Small controlled form used for both "edit" and "add another child". */
 function ChildForm({ initial, submitLabel, onSubmit, onCancel }) {

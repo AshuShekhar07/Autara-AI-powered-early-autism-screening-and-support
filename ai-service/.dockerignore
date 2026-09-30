@@ -1,0 +1,12 @@
+.venv
+__pycache__
+.pytest_cache
+storage
+.env
+tests
+data/*
+!data/README.md
+knowledge/*
+!knowledge/README.md
+!knowledge/sources.yaml
+ml/model.joblib
