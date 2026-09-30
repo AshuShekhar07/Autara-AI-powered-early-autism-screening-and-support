@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import DomainBreakdownChart from '../components/dashboard/DomainBreakdownChart'
+import InsightForFamily from '../components/InsightForFamily'
 import { api } from '../lib/api'
 import { formatDate, formatAgeMonths } from '../lib/format'
 import { DISCLAIMER, TIER_COPY, STATUS_LABELS } from '../lib/screeningCopy'
@@ -143,6 +144,8 @@ export default function ScreeningResult() {
 
         <DomainBreakdownChart domains={screening.domainBreakdown} />
         <p className="sc-hint">{instrument.domainGroupingNote}</p>
+
+        <InsightForFamily screeningId={screening.id} />
 
         <div className="sc-card sr-section">
           <h2>Share with your care team</h2>

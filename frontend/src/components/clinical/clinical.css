@@ -45,3 +45,16 @@
 
 /* evidence-link target highlight (answers, logs) */
 .is-jump-target { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
+
+/* AI insight panel */
+.in-body { display: flex; flex-direction: column; gap: 14px; }
+.in-h { font-family: var(--font-ui); font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-secondary); margin-bottom: 4px; }
+.in-areas { display: flex; flex-direction: column; gap: 10px; }
+.in-area { background: var(--bg-tint); border-radius: var(--r-sm); padding: 12px 14px; font-size: .88rem; display: flex; flex-direction: column; gap: 4px; }
+.in-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .8rem; }
+.in-key { font-weight: 600; color: var(--ink-secondary); }
+.in-ev { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 1.5px solid var(--brand); font-size: .76rem; font-weight: 600; background: var(--bg-card); }
+.in-ev:hover { background: var(--brand-lt); text-decoration: none; }
+.in-ref { display: inline-block; padding: 2px 10px; border-radius: 6px; background: var(--bg-card); border: 1px solid var(--border-md); font-size: .76rem; }
+.in-uncertainty { background: var(--notice-bg); border: 1px solid var(--notice-border); border-radius: var(--r-sm); padding: 12px 14px; color: var(--notice-text); font-size: .88rem; }
+.in-family { background: var(--brand-lt); border-radius: var(--r-sm); padding: 12px 14px; font-size: .9rem; }

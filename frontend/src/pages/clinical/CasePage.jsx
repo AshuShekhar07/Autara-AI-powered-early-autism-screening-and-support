@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/dashboard/DashboardLayout'
 import DomainBreakdownChart from '../../components/dashboard/DomainBreakdownChart'
 import BehaviourHistory from '../../components/behaviour/BehaviourHistory'
 import ReviewPanel from '../../components/clinical/ReviewPanel'
+import InsightPanel from '../../components/clinical/InsightPanel'
 import Timeline from '../../components/clinical/Timeline'
 import TierPill from '../../components/clinical/TierPill'
 import { useAuth } from '../../context/AuthContext'
@@ -118,7 +119,7 @@ export default function CasePage() {
         <DomainBreakdownChart domains={screening.domainBreakdown} />
         <p className="sc-hint">{instrument.data.instrument.domainGroupingNote}</p>
 
-        {/* AI insight panel is added in Phase 5 (src/components/clinical/InsightPanel.jsx) */}
+        <InsightPanel screening={screening} canAct={isClinician} />
 
         <ReviewPanel screening={screening} canAct={isClinician} onChange={updated} />
 

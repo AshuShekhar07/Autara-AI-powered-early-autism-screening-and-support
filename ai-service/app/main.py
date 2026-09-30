@@ -4,6 +4,9 @@ Run:  uvicorn app.main:app --host 127.0.0.1 --port 8000     (or: python -m app)
 """
 from fastapi import Depends, FastAPI
 
+from app.assistant.router import router as assistant_router
+from app.insights.router import router as insights_router
+from app.rag.router import router as rag_router
 from app.screening.router import router as screening_router
 from app.security import require_internal_key
 
@@ -21,4 +24,5 @@ def health() -> dict:
 
 
 # Every business router is mounted with the internal-key dependency.
-app.include_router(screening_router, dependencies=[Depends(require_internal_key)])
+for router in (screening_router, insights_router, assistant_router, rag_router):
+    app.include_router(router, dependencies=[Depends(require_internal_key)])

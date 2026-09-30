@@ -2,6 +2,7 @@ const Screening = require('../models/Screening')
 const BehaviourLog = require('../models/BehaviourLog')
 const SessionNote = require('../models/SessionNote')
 const Child = require('../models/Child')
+const Insight = require('../models/Insight')
 const User = require('../models/User')
 const { screeningView } = require('../lib/screeningView')
 const { ok, asyncHandler } = require('../utils/respond')
@@ -155,11 +156,8 @@ const notifications = asyncHandler(async (req, res) => {
     const failed = await Screening.find({ childId: { $in: ids }, status: 'PROCESSING_FAILED' })
     for (const s of reviewed) items.push({ id: `rev-${s._id}`, type: 'review', title: 'Screening reviewed', message: 'A clinician has reviewed your child\'s screening.', at: s.clinicianReview.reviewedAt, to: `/screenings/${s._id}` })
     for (const s of failed) items.push({ id: `fail-${s._id}`, type: 'system', title: 'Screening needs a retry', message: 'We couldn\'t score a screening. Your answers are saved.', at: s.updatedAt, to: `/screenings/${s._id}` })
-    const Insight = require('mongoose').models.Insight
-    if (Insight) {
-      const approved = await Insight.find({ childId: { $in: ids }, status: 'approved', approvedAt: { $gte: since } })
-      for (const i of approved) items.push({ id: `ins-${i._id}`, type: 'insight', title: 'New reviewed insight', message: 'A clinician approved a plain-language summary for you.', at: i.approvedAt, to: `/screenings/${i.screeningId}` })
-    }
+    const approved = await Insight.find({ childId: { $in: ids }, status: 'approved', approvedAt: { $gte: since } })
+    for (const i of approved) items.push({ id: `ins-${i._id}`, type: 'insight', title: 'New reviewed insight', message: 'A clinician approved a plain-language summary for you.', at: i.approvedAt, to: `/screenings/${i.screeningId}` })
   } else if (role === 'clinician') {
     const kids = await Child.find({ 'careTeam.uid': uid })
     const waiting = await Screening.countDocuments({ childId: { $in: kids.map((k) => k._id) }, status: { $in: ['INSIGHTS_READY', 'UNDER_CLINICAL_REVIEW'] } })

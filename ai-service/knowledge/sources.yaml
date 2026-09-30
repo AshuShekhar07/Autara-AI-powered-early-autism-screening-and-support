@@ -1,0 +1,13 @@
+# Approved reference documents for the RAG corpus.
+#
+# Only files listed here are ingested. Add an entry ONLY for documents your team has approved
+# and is allowed to use. Put the file itself in this folder (its contents are git-ignored).
+#
+# sources:
+#   - file: example-guideline.pdf          # file name inside ai-service/knowledge/
+#     title: "Exact document title"        # shown to users as the citation
+#     publisher: "Publisher / organisation"
+#     url: "https://..."
+#     version: "2024"                      # edition / year / version
+#     docType: guideline                   # guideline | screening-manual | fact-sheet | other
+sources: []

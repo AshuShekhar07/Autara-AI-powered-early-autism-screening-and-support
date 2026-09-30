@@ -12,6 +12,8 @@ import DomainBreakdownChart     from '../components/dashboard/DomainBreakdownCha
 import CareTeamSection          from '../components/dashboard/CareTeamSection'
 import RecentActivity           from '../components/dashboard/RecentActivity'
 import ResourcesSection         from '../components/dashboard/ResourcesSection'
+import AskAutaraCard            from '../components/dashboard/AskAutaraCard'
+import InsightForFamily         from '../components/InsightForFamily'
 import LogBehaviourForm         from '../components/behaviour/LogBehaviourForm'
 import { useChildren }          from '../context/ChildContext'
 import { useApi }               from '../hooks/useApi'
@@ -70,6 +72,8 @@ export default function Dashboard() {
 
           <LatestResultCard overview={overview} loading={loading} />
 
+          {overview?.lastScreening && <div style={{ marginBottom: 28 }}><InsightForFamily screeningId={overview.lastScreening.id} /></div>}
+
           <DevelopmentalMilestones />
 
           <div className="db-charts-row">
@@ -92,6 +96,8 @@ export default function Dashboard() {
           </div>
         </>
       )}
+
+      {activeChild && <AskAutaraCard />}
 
       <ResourcesSection />
     </DashboardLayout>
