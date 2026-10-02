@@ -1,10 +1,26 @@
 """Google Gemini implementation of LLMProvider (google-genai SDK)."""
 from __future__ import annotations
 
+import time
+
 from app import config
 from app.llm.base import EmbedKind, LLMError
 
 _EMBED_BATCH = 100  # API limit per embed call
+
+
+_RETRY_CODES = {429, 500, 503}   # temporary overload / rate limit: worth a short wait and another try
+_RETRY_DELAYS = (2, 5, 10)       # seconds; so a busy model is tried up to 4 times in total
+
+
+def _with_retry(call):
+    for delay in (*_RETRY_DELAYS, None):
+        try:
+            return call()
+        except Exception as exc:  # noqa: BLE001
+            if delay is None or getattr(exc, "code", None) not in _RETRY_CODES:
+                raise
+            time.sleep(delay)
 
 
 def _describe(exc: Exception) -> str:
@@ -31,7 +47,7 @@ class GeminiProvider:
 
     def generate_json(self, system: str, user: str) -> str:
         try:
-            resp = self._client.models.generate_content(
+            resp = _with_retry(lambda: self._client.models.generate_content(
                 model=self.model,
                 contents=user,
                 config=self._types.GenerateContentConfig(
@@ -39,7 +55,7 @@ class GeminiProvider:
                     response_mime_type="application/json",  # ask for a single JSON object
                     temperature=0.2,                          # low: we want faithful, not creative
                 ),
-            )
+            ))
             return resp.text or ""
         except Exception as exc:  # SDK raises many types; callers only need "it failed"
             raise LLMError("LLM_ERROR", f"Gemini generation failed: {_describe(exc)}") from exc
@@ -49,11 +65,12 @@ class GeminiProvider:
         out: list[list[float]] = []
         try:
             for i in range(0, len(texts), _EMBED_BATCH):
-                resp = self._client.models.embed_content(
+                batch = texts[i : i + _EMBED_BATCH]
+                resp = _with_retry(lambda: self._client.models.embed_content(
                     model=self.embedding_model,
-                    contents=texts[i : i + _EMBED_BATCH],
+                    contents=batch,
                     config=self._types.EmbedContentConfig(task_type=task),
-                )
+                ))
                 out.extend(list(e.values) for e in resp.embeddings)
         except Exception as exc:
             raise LLMError("EMBEDDING_ERROR", f"Gemini embedding failed: {_describe(exc)}") from exc
