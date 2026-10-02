@@ -14,5 +14,22 @@ This folder feeds Autara's retrieval-augmented explanations ("insights") and **A
 Until at least one source is ingested, insights are generated from the patient's own evidence only
 (`references: []`, with an uncertainty note) and Ask Autara answers that no reference material is loaded yet.
 
+## Try the pipeline with the demo document (optional)
+`docs/examples/autara-product-help.md` is a **non-clinical** help sheet about how the Autara app works, for testing only.
+```bash
+cp ../docs/examples/autara-product-help.md knowledge/        # from ai-service/ (Windows: copy ..\docs\examples\autara-product-help.md knowledge\)
+```
+then add this to `knowledge/sources.yaml` (replace `sources: []`):
+```yaml
+sources:
+  - file: autara-product-help.md
+    title: "Autara product help (demo)"
+    publisher: "Autara team"
+    url: "https://example.test/autara-help"
+    version: "demo-1"
+    docType: fact-sheet
+```
+and run `python -m app.rag.ingest`. Remove the entry (and re-ingest with `--reset`) before real use.
+
 ## Approved sources
 _None yet — list them here (title · publisher · version · link) as they are approved._

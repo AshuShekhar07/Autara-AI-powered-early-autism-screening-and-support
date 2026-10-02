@@ -67,6 +67,12 @@ With an empty corpus everything still works: insights use patient evidence only 
 
 `ml/train.py` trains a logistic regression from a CSV you provide (see `data/README.md`), does stratified 5-fold CV, saves `ml/model.joblib` and writes `docs/MODEL_CARD.md`, including a **label-leakage warning** if the dataset's label is derived from the M-CHAT-R score. At inference the probability is included only if a compatible model file exists; the rule-based tier is always authoritative.
 
+## Check your Gemini key
+
+```bash
+python -m app.llm.check     # one tiny text call + one embedding call; prints PASS/FAIL and the real reason
+```
+
 ## Tests and evaluation
 
 ```bash
