@@ -7,6 +7,16 @@ from app.llm.base import EmbedKind, LLMError
 _EMBED_BATCH = 100  # API limit per embed call
 
 
+def _describe(exc: Exception) -> str:
+    """Short, key-free description of an SDK error: type plus HTTP status/message when present."""
+    code = getattr(exc, "code", None)
+    msg = getattr(exc, "message", None) or ""
+    detail = f" {code}" if code else ""
+    if msg:
+        detail += f": {str(msg)[:200]}"
+    return f"{type(exc).__name__}{detail}"
+
+
 class GeminiProvider:
     name = "gemini"
 
@@ -32,7 +42,7 @@ class GeminiProvider:
             )
             return resp.text or ""
         except Exception as exc:  # SDK raises many types; callers only need "it failed"
-            raise LLMError("LLM_ERROR", f"Gemini generation failed: {type(exc).__name__}") from exc
+            raise LLMError("LLM_ERROR", f"Gemini generation failed: {_describe(exc)}") from exc
 
     def embed(self, texts: list[str], kind: EmbedKind) -> list[list[float]]:
         task = "RETRIEVAL_DOCUMENT" if kind == "document" else "RETRIEVAL_QUERY"
@@ -46,7 +56,7 @@ class GeminiProvider:
                 )
                 out.extend(list(e.values) for e in resp.embeddings)
         except Exception as exc:
-            raise LLMError("EMBEDDING_ERROR", f"Gemini embedding failed: {type(exc).__name__}") from exc
+            raise LLMError("EMBEDDING_ERROR", f"Gemini embedding failed: {_describe(exc)}") from exc
         return out
 
 
