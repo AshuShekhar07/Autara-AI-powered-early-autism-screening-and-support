@@ -33,7 +33,17 @@ const askAutara = asyncHandler(async (req, res) => {
     if (context) payload.context = context
   }
 
-  const result = await aiClient.ask(payload)
+  let result
+  try {
+    result = await aiClient.ask(payload)
+  } catch (err) {
+    // Whatever went wrong, never leave someone with a bare error: urgent help must always be pointed out.
+    if (err instanceof AppError && ['AI_SERVICE_UNAVAILABLE', 'AI_SERVICE_TIMEOUT', 'AI_SERVICE_ERROR'].includes(err.code)) {
+      throw new AppError(err.status, err.code,
+        'Ask Autara is not available right now. If this is urgent, contact your clinician or local emergency services.')
+    }
+    throw err
+  }
   return ok(res, {
     answer: result.answer,
     sources: result.sources || [],          // always present

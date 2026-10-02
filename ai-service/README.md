@@ -25,6 +25,10 @@ python -m app                   # or: uvicorn app.main:app --host 127.0.0.1 --po
 
 Without `GEMINI_API_KEY`: `/screen` works; `/insights` returns `status: "failed"` (`LLM_NOT_CONFIGURED`); `/ask` works for guardrail cases and says "no reference material loaded" while the index is empty.
 
+## Offline fallback copy
+
+The backend keeps `backend/data/mchatr-instrument.json` so screening still works when this service is down. It is generated from `app/screening/mchatr.py`; after changing items, domains or scoring run `python -m scripts.export_instrument` (a pytest fails if you forget).
+
 ## Layout
 
 ```

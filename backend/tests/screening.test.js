@@ -1,5 +1,11 @@
 jest.mock('../lib/aiClient')
+jest.mock('../lib/localScorer', () => {
+  const actual = jest.requireActual('../lib/localScorer')
+  return { ...actual, scoreLocally: jest.fn(actual.scoreLocally) }
+})
 const aiClient = require('../lib/aiClient')
+const localScorer = require('../lib/localScorer')
+const actualLocal = jest.requireActual('../lib/localScorer')
 const app = require('../app')
 const Screening = require('../models/Screening')
 const { AppError } = require('../utils/respond')
@@ -9,7 +15,11 @@ const { connectTestDb, disconnectTestDb, clearDb, api, makeUser, makeChild } = r
 const http = api(app)
 beforeAll(connectTestDb)
 afterAll(disconnectTestDb)
-beforeEach(async () => { await clearDb(); jest.resetAllMocks(); aiClient.screen.mockImplementation(fakeScore) })
+beforeEach(async () => {
+  await clearDb(); jest.resetAllMocks()
+  aiClient.screen.mockImplementation(fakeScore)
+  localScorer.scoreLocally.mockImplementation(actualLocal.scoreLocally)
+})
 
 /** Test double for the AI service using the official rules (2,5,12 reverse-scored). */
 async function fakeScore({ answers }) {
@@ -106,9 +116,23 @@ describe('POST /api/screenings', () => {
     expect((await http.post('/api/screenings', 'cl1').send({ childId, answers: typical() })).status).toBe(403)
   })
 
-  it('keeps the screening as PROCESSING_FAILED when the AI service is down, and retry recovers', async () => {
+  it('still scores (locally, with the same official rules) when the AI service is down', async () => {
+    const childId = await setup()
+    aiClient.screen.mockRejectedValue(new AppError(503, 'AI_SERVICE_UNAVAILABLE', 'down'))
+    const res = await http.post('/api/screenings', 'cg1').send({ childId, answers: riskyN(8) })
+    expect(res.status).toBe(201)
+    expect(res.body.data.screening).toMatchObject({ status: 'INSIGHTS_READY', riskScore: 8, riskTier: 'high', failureCode: null })
+    const stored = await Screening.findById(res.body.data.screening.id)
+    expect(stored.modelVersion).toBe('mchatr-rules-v1-local')
+    expect(stored.modelProbability).toBeNull()
+    expect(stored.atRiskItems).toHaveLength(8)
+    expect(stored.domainBreakdown.reduce((n, d) => n + d.atRiskCount, 0)).toBe(8)
+  })
+
+  it('keeps the screening as PROCESSING_FAILED only if scoring fails everywhere, and retry recovers', async () => {
     const childId = await setup()
     aiClient.screen.mockRejectedValueOnce(new AppError(503, 'AI_SERVICE_UNAVAILABLE', 'down'))
+    localScorer.scoreLocally.mockImplementationOnce(() => { throw new Error('boom') })
     const res = await http.post('/api/screenings', 'cg1').send({ childId, answers: riskyN(3) })
     expect(res.status).toBe(201)
     expect(res.body.data.screening).toMatchObject({ status: 'PROCESSING_FAILED', failureCode: 'AI_SERVICE_UNAVAILABLE', riskScore: null })
@@ -121,6 +145,19 @@ describe('POST /api/screenings', () => {
     const again = await http.post(`/api/screenings/${id}/retry`, 'cg1')
     expect(again.status).toBe(409)
     expect(again.body.error.code).toBe('INVALID_STATUS_TRANSITION')
+  })
+})
+
+describe('GET /api/screenings/instrument', () => {
+  it('still returns the questionnaire when the AI service is down', async () => {
+    await setup()
+    aiClient.instrument.mockRejectedValue(new AppError(503, 'AI_SERVICE_UNAVAILABLE', 'down'))
+    require('../lib/instrument').clearInstrumentCache()
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const res = await http.get('/api/screenings/instrument', 'cg1')
+    expect(res.status).toBe(200)
+    expect(res.body.data.instrument.items).toHaveLength(20)
+    expect(res.body.data.instrument.copyright).toMatch(/Diana Robins/)
   })
 })
 

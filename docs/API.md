@@ -84,8 +84,8 @@ admin → never (`403 ADMIN_NO_CHILD_ACCESS`). Any other "no" is `404 CHILD_NOT_
 
 | Method & path | Roles | Description |
 | --- | --- | --- |
-| `GET /api/screenings/instrument` | care roles, clinical | The 20 items, domains, copyright, `wordingVerified` (from the AI service, cached) |
-| `POST /api/screenings` | care roles (owner) | `{ childId, answers: {"1":"yes"…"20":"no"} }`. Age computed server-side; `400 AGE_OUT_OF_RANGE` outside 16–30 months. Saved as `PROCESSING` first; on scorer outage the screening is kept as `PROCESSING_FAILED` (still `201`) |
+| `GET /api/screenings/instrument` | care roles, clinical | The 20 items, domains, copyright, `wordingVerified` (from the AI service, cached; a built-in copy is used if it is down) |
+| `POST /api/screenings` | care roles (owner) | `{ childId, answers: {"1":"yes"…"20":"no"} }`. Age computed server-side; `400 AGE_OUT_OF_RANGE` outside 16–30 months. Saved as `PROCESSING` first. If the AI service is unreachable it is scored locally with the same rules (`modelVersion` `mchatr-rules-v1-local`); only if that fails too is it kept as `PROCESSING_FAILED` (still `201`) |
 | `GET /api/screenings?childId=&limit=&before=` | anyone with access | Newest first |
 | `GET /api/screenings/:id` | anyone with access | Caregivers never see `modelProbability`; review details only once `REVIEWED` |
 | `POST /api/screenings/:id/retry` | owner | Only from `PROCESSING_FAILED` |

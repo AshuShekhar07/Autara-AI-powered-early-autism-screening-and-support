@@ -80,6 +80,17 @@ describe('POST /api/assistant/ask', () => {
   })
 })
 
+describe('when the AI service is down', () => {
+  it('still tells the user what to do if it is urgent', async () => {
+    const { AppError } = require('../utils/respond')
+    aiClient.ask.mockRejectedValue(new AppError(503, 'AI_SERVICE_UNAVAILABLE', 'down'))
+    const res = await http.post('/api/assistant/ask', 'cg1').send({ question: 'My child is not breathing' })
+    expect(res.status).toBe(503)
+    expect(res.body.error.code).toBe('AI_SERVICE_UNAVAILABLE')
+    expect(res.body.error.message).toMatch(/contact your clinician or local emergency services/)
+  })
+})
+
 describe('rateLimit window', () => {
   it('lets requests through again once the window has passed', () => {
     let t = 0

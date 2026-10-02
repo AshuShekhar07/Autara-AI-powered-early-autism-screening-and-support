@@ -1,5 +1,6 @@
 const Screening = require('../models/Screening')
 const aiClient = require('../lib/aiClient')
+const { scoreLocally } = require('../lib/localScorer')
 const { getInstrument } = require('../lib/instrument')
 const { advance } = require('../lib/screeningStatus')
 const { screeningView } = require('../lib/screeningView')
@@ -40,26 +41,37 @@ function validateAnswers(raw) {
 }
 
 /**
- * Runs the scorer for a screening that is in PROCESSING and records the outcome.
- * A scorer outage is NOT thrown to the client: the screening is saved as PROCESSING_FAILED
+ * Scores a screening that is in PROCESSING and records the outcome.
+ *
+ * The AI service is the primary scorer (it can also add the optional ML probability). If it can't be
+ * reached, the identical official rules are applied locally (lib/localScorer.js) so the caregiver
+ * still gets a result. Only if scoring fails entirely is the screening saved as PROCESSING_FAILED,
  * so the caregiver can retry without re-entering answers.
  */
 async function runScoring(screening) {
+  let result
   try {
-    const result = await aiClient.screen({ answers: screening.answers })
-    screening.riskScore = result.riskScore
-    screening.riskTier = result.riskTier
-    screening.atRiskItems = result.atRiskItems
-    screening.domainBreakdown = result.domainBreakdown
-    screening.modelProbability = result.modelProbability ?? null
-    screening.modelVersion = result.modelVersion ?? null
-    screening.failureCode = null
-    advance(screening, 'INSIGHTS_READY')
+    result = await aiClient.screen({ answers: screening.answers })
   } catch (err) {
-    screening.failureCode = err.code || 'SCORING_FAILED'
-    advance(screening, 'PROCESSING_FAILED')
-    console.error('[screening] scoring failed:', screening.failureCode)
+    console.warn(`[screening] AI service unavailable (${err.code || err.message}) — scoring locally`)
+    try {
+      result = scoreLocally(screening.answers)
+    } catch (localErr) {
+      screening.failureCode = err.code || 'SCORING_FAILED'
+      advance(screening, 'PROCESSING_FAILED')
+      console.error('[screening] scoring failed:', localErr.message)
+      await screening.save()
+      return
+    }
   }
+  screening.riskScore = result.riskScore
+  screening.riskTier = result.riskTier
+  screening.atRiskItems = result.atRiskItems
+  screening.domainBreakdown = result.domainBreakdown
+  screening.modelProbability = result.modelProbability ?? null
+  screening.modelVersion = result.modelVersion ?? null
+  screening.failureCode = null
+  advance(screening, 'INSIGHTS_READY')
   await screening.save()
 }
 

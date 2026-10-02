@@ -90,7 +90,7 @@ PDF (pdfkit) and CSV are generated on demand, streamed, and recorded as history 
 
 | Failure | Behaviour |
 | --- | --- |
-| AI service down when scoring | Screening saved as `PROCESSING_FAILED`; caregiver can retry without re-entering answers |
+| AI service down when scoring | Scored locally with the same official rules (`modelVersion: mchatr-rules-v1-local`, no ML probability). Only if that also fails is the screening saved as `PROCESSING_FAILED` for a retry |
 | AI service down when generating an insight | `503 AI_SERVICE_UNAVAILABLE`, nothing stored |
 | LLM output fails validation twice | `failed` insight with reason codes; nothing unsafe is shown or stored |
 | No Gemini key | Screening works; insights `failed: LLM_NOT_CONFIGURED`; Ask Autara says it's unavailable (or "no reference material" while the index is empty) |

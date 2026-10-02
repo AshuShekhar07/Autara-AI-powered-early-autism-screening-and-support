@@ -62,7 +62,7 @@ pip install -r requirements.txt
 cp .env.example .env        # AI_SERVICE_KEY (same value as the backend), GEMINI_API_KEY (optional)
 python -m app               # binds to 127.0.0.1:8000
 ```
-Screening works without a Gemini key; insights fail gracefully and Ask Autara says it is unavailable. Details: [`ai-service/README.md`](ai-service/README.md).
+Screening works without a Gemini key — and even without the AI service running at all (the backend then scores locally with the same official rules). Insights and Ask Autara need the AI service; without a Gemini key they fail gracefully. Details: [`ai-service/README.md`](ai-service/README.md).
 
 ### 3. Frontend (`:3000`)
 ```bash
