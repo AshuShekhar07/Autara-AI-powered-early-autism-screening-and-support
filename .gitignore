@@ -35,4 +35,4 @@ ai-service/knowledge/*
 frontend/.env
 backend/.env
 ai-service/.env
-state.json
+**/state.json

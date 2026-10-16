@@ -71,11 +71,11 @@ export default function ResourcesSection() {
               target="_blank"
               rel="noopener noreferrer"
               className="resource-card"
-              aria-label={`${r.title} — opens in a new tab`}
             >
               <span className="resource-card__tag">{r.tag}</span>
               <span className="resource-card__title">{r.title}</span>
               <span className="resource-card__desc">{r.desc}</span>
+              <span className="sr-only"> (opens in a new tab)</span>
               <span className="resource-card__link-label" aria-hidden="true">
                 {r.linkLabel}
                 <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

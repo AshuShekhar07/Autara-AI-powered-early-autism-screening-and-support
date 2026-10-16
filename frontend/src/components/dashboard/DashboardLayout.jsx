@@ -122,11 +122,10 @@ function UserMenu({ user, name, role, onLogout }) {
         className="db-user-menu__trigger"
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Open user menu"
         onClick={() => setOpen(v => !v)}
       >
         <Avatar name={name} email={user?.email} size="sm" />
-        <span className="db-user-menu__name">{displayName}</span>
+        <span className="db-user-menu__name"><span className="sr-only">Open user menu: </span>{displayName}</span>
         <svg
           className="db-user-menu__chevron"
           width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"
@@ -191,7 +190,7 @@ export default function DashboardLayout({ children, activeNav = 'dashboard', pag
     <div className="db-shell">
       {/* ── Desktop sidebar ── */}
       <aside className="db-sidebar" aria-label="Main navigation">
-        <Link to={home} className="db-sidebar__brand" aria-label="Autara home">
+        <Link to={home} className="db-sidebar__brand">
           <LogoMark size={36} />
           <div className="db-sidebar__wordmark">
             <span className="db-sidebar__name">Autara</span>
@@ -232,7 +231,7 @@ export default function DashboardLayout({ children, activeNav = 'dashboard', pag
       <div className="db-main" id="main-content">
         {/* Mobile top bar */}
         <div className="db-mobile-topbar" role="banner">
-          <Link to={home} className="db-mobile-brand" aria-label="Autara home">
+          <Link to={home} className="db-mobile-brand">
             <LogoMark size={28} />
             <span className="db-mobile-brand__name">Autara</span>
           </Link>

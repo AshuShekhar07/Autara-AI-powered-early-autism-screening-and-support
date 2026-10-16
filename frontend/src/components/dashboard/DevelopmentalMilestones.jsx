@@ -129,7 +129,7 @@ export default function DevelopmentalMilestones() {
             }
           </p>
         </div>
-        <Link to="/milestones" className="ms-section__view-all" aria-label="View all developmental milestones">
+        <Link to="/milestones" className="ms-section__view-all">
           View All Milestones
         </Link>
       </div>
@@ -159,7 +159,7 @@ export default function DevelopmentalMilestones() {
               <Link
                 to="/milestones"
                 className="ms-item__review-link"
-                aria-label={`Review ${cat.label} milestones`}
+                aria-label={`Review milestones: ${cat.label}`}
               >
                 Review milestones
                 <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" aria-hidden="true">

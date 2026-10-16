@@ -5,7 +5,7 @@
    ─ Ink / primary: #1F2E2B (deep teal-charcoal)
    ─ Brand:         #2F6F62 (muted deep teal)
    ─ Accent CTA:    #C98A3E (warm amber-gold — sparing)
-   ─ Muted:         #8B8FA3 (dusty lavender-gray)
+   ─ Muted:         #646A7E (slate gray, 4.5:1+ on white)
    ─ Headings:  Fraunces
    ─ Body/UI:   Public Sans
    ============================================================ */
@@ -19,7 +19,7 @@
 
   --ink:             #1F2E2B;
   --ink-secondary:   #4E5A57;
-  --ink-muted:       #8B8FA3;
+  --ink-muted:       #646A7E;
 
   --brand:           #2F6F62;
   --brand-lt:        #E8F0EE;
@@ -27,6 +27,8 @@
 
   --gold:            #C98A3E;
   --gold-hover:      #AE7530;
+  --gold-strong:     #9A6420;   /* amber for buttons with white text (4.98:1) */
+  --gold-strong-hover: #8A5A16; /* 5.9:1 */
   --gold-lt:         #FAF3EA;
 
   --ok-text:         #2C6351;
@@ -163,12 +165,12 @@ a:focus-visible {
 
 /* Amber CTA — primary submit */
 .btn--primary {
-  background: var(--gold);
+  background: var(--gold-strong);
   color: #fff;
   box-shadow: var(--shadow-glow);
 }
 .btn--primary:hover:not(:disabled) {
-  background: var(--gold-hover);
+  background: var(--gold-strong-hover);
   transform: translateY(-1px);
   box-shadow: 0 10px 32px -4px rgba(201,138,62,.42);
 }
@@ -303,3 +305,13 @@ button:focus-visible {
 @media (max-width: 768px) {
   .db-two-col { grid-template-columns: 1fr; }
 }
+
+/* Visually hidden text for screen readers */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Links inside muted/hint text must not rely on colour alone (WCAG 1.4.1) */
+.sc-muted a, .sc-hint a, .bh-muted a { text-decoration: underline; text-underline-offset: 2px; }
+

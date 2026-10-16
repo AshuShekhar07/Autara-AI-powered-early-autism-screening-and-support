@@ -9,6 +9,17 @@ import { antecedentLabel, behaviourLabel, consequenceLabel, WEEKDAYS } from '../
 import './behaviour.css'
 
 /** Weekly count line (one series → no legend; title says what it is). */
+/**
+ * Heat-map cell colours. Two bands so text always has at least 4.5:1 contrast:
+ * light tint + dark text for lower counts, solid dark green + white text for the highest.
+ */
+function heatStyle(n, max) {
+  if (!n) return { background: 'transparent' }
+  const ratio = n / max
+  if (ratio <= 0.5) return { background: `rgba(30,84,74,${(0.08 + 0.55 * ratio).toFixed(2)})` }
+  return { background: `rgba(30,84,74,${(0.85 + 0.3 * (ratio - 0.5)).toFixed(2)})`, color: '#fff' }
+}
+
 export function WeeklyTrendChart({ summary, ...state }) {
   const data = (summary?.weeklyTrend || []).map((w) => ({ ...w, label: formatDate(w.weekStart, { day: 'numeric', month: 'short' }) }))
   return (
@@ -110,7 +121,7 @@ export function TriggerMatrix({ summary, ...state }) {
       empty={!view} emptyText="Log a few entries to see which triggers go with which behaviours.">
       {view && (
         <>
-          <div className="bh-tablewrap">
+          <div className="bh-tablewrap" role="region" aria-label="Before-and-behaviour table (scrollable)" tabIndex={0}>
             <table className="bh-table bh-heat">
               <caption className="bh-sr">Number of entries for each before-and-behaviour pair</caption>
               <thead><tr><th scope="col">Before ↓ / Behaviour →</th>{view.cols.map((c) => <th key={c} scope="col">{behaviourLabel(c)}</th>)}</tr></thead>
@@ -120,7 +131,7 @@ export function TriggerMatrix({ summary, ...state }) {
                     <th scope="row">{antecedentLabel(r)}</th>
                     {view.cols.map((c) => {
                       const n = view.cell[`${r}|${c}`] || 0
-                      return <td key={c} style={{ background: n ? `rgba(47,111,98,${0.12 + 0.68 * (n / view.max)})` : 'transparent', color: n && n / view.max > 0.6 ? '#fff' : undefined }}
+                      return <td key={c} style={heatStyle(n, view.max)}
                                  aria-label={`${antecedentLabel(r)} then ${behaviourLabel(c)}: ${n}`}>{n || ''}</td>
                     })}
                   </tr>

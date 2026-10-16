@@ -43,7 +43,6 @@ export default function WelcomeBanner() {
       <Link
         to="/screening"
         className="welcome-banner__cta"
-        aria-label="Start a new screening"
       >
         <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="9"/>

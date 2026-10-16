@@ -49,7 +49,7 @@ export function ChartCard({ title, subtitle, loading, error, onRetry, empty, emp
       ) : empty ? (
         <div className="bh-chart__state" role="status"><p className="bh-empty">{emptyText}</p></div>
       ) : asTable && table ? (
-        <div className="bh-tablewrap">
+        <div className="bh-tablewrap" role="region" aria-label="Chart data table (scrollable)" tabIndex={0}>
           <table className="bh-table">
             <thead><tr>{table.columns.map((c) => <th key={c} scope="col">{c}</th>)}</tr></thead>
             <tbody>{table.rows.map((r, i) => <tr key={i}>{r.map((v, j) => (j === 0 ? <th key={j} scope="row">{v}</th> : <td key={j}>{v}</td>))}</tr>)}</tbody>
