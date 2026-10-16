@@ -80,6 +80,51 @@ docker compose up --build             # then: cd frontend && npm run dev
 ```
 The AI service port is not published to the host; only the backend can reach it.
 
+### Windows (PowerShell) quick start
+Use three PowerShell windows. Replace the path with wherever you cloned the repo.
+```powershell
+# Window 1 — backend
+cd C:\path\to\Autara-AI-powered-early-autism-screening-and-support\backend
+copy .env.example .env        # then: notepad .env   (fill in the values; see the table below)
+npm install
+npm run dev
+
+# Window 2 — AI service (needs Python 3.11 from python.org or `winget install Python.Python.3.11`; use `py -3.11`)
+cd C:\path\to\Autara-AI-powered-early-autism-screening-and-support\ai-service
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env        # AI_SERVICE_KEY (same as backend) and GEMINI_API_KEY
+python -m app.llm.check       # both lines should say PASS
+python -m app
+
+# Window 3 — frontend
+cd C:\path\to\Autara-AI-powered-early-autism-screening-and-support\frontend
+copy .env.example .env        # Firebase web config
+npm install
+npm run dev                   # open http://localhost:3000
+```
+Load the demo reference document so Ask Autara can answer (run in the AI-service window, venv active):
+```powershell
+copy ..\docs\examples\autara-product-help.md knowledge\
+notepad knowledge\sources.yaml     # replace "sources: []" with the entry shown in knowledge\README.md
+python -m app.rag.ingest            # expect "Ingested 1 file(s)"; restart `python -m app`
+python -m app.assistant.debug "Who can see my child's screening?"   # step-by-step check
+```
+
+| Symptom | Usual cause and fix |
+| --- | --- |
+| `ECONNREFUSED 127.0.0.1:27017` in the backend | `MONGODB_URI` is empty or points at a local MongoDB that is not running — use your Atlas connection string |
+| Atlas "could not connect" / "bad auth" | Add your IP in Atlas → Network Access; check the database user password and URI |
+| `vite` is not recognised | Run `npm install` in `frontend` |
+| "Application Control policy has blocked" for `@rollup/rollup-win32-x64-msvc` | Windows Smart App Control blocks the native file. Use the WebAssembly build: add `"overrides": {"rollup": "npm:@rollup/wasm-node"}` to `frontend/package.json`, delete `node_modules` and `package-lock.json`, run `npm install` (do not commit those two files) |
+| Signup shows "Something went wrong" / proxy `ECONNRESET` | The backend is not running |
+| Ask Autara: "not available" | The AI service is not running, or `AI_SERVICE_KEY` differs between backend and AI service |
+| Ask Autara: "No reference material" | Nothing ingested yet — see the demo document step above |
+| Gemini `403 ... denied access` | The key's Google project is blocked: create a key in a **new** project at aistudio.google.com/apikey |
+| Gemini `503 ... high demand` | Temporary; the service retries automatically. Try again or set `LLM_MODEL` to another model |
+| `.env` changes have no effect | Restart that service — `.env` is read at start-up |
+
 ### Environment variables
 
 | File | Variable | Purpose |
@@ -88,7 +133,8 @@ The AI service port is not published to the host; only the backend can reach it.
 | | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` | Firebase Admin credentials (verify ID tokens) |
 | | `ALLOWED_ORIGINS` | CORS allow-list (default `http://localhost:3000`) |
 | | `AI_SERVICE_URL`, `AI_SERVICE_KEY` | Where the AI service is + the shared secret |
-| | `ASK_RATE_LIMIT_PER_HOUR` | Ask Autara limit per user (default 20) |
+| | `ASK_RATE_LIMIT_PER_HOUR` | Ask Autara limit per user (default 20; stored in MongoDB) |
+| | `AUTH_CHECK_REVOKED` | `true` also rejects revoked/disabled Firebase sessions (recommended when deployed) |
 | `ai-service/.env` | `AI_SERVICE_KEY` | Must equal the backend's value |
 | | `GEMINI_API_KEY`, `LLM_MODEL`, `EMBEDDING_MODEL` | LLM provider and models (check current names at ai.google.dev) |
 | | `RAG_TOP_K`, `RAG_MIN_SIMILARITY` | Retrieval settings |

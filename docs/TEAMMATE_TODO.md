@@ -5,6 +5,23 @@ admin analytics) is built and runs end to end on demo data. It lives on branch *
 Read `readme.md`, `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` first (20 minutes). This file lists what
 is still open, grouped by effort.
 
+## Status update (after the hardening round)
+
+**Done and verified** (tests green locally; CI green on the earlier commits including the real-MongoDB backend job):
+- L1 secrets audit: git history and tracked files scanned, only placeholders found.
+- L3 Gemini retry tests, L4 CI verified, L7 env examples completed, L6 Windows quick-start and troubleshooting table in the readme.
+- M5 accessibility: axe-core run over all role pages at 1280px and 360px; all issues fixed, zero violations (D-063), contrast regression test added.
+- M6 frontend states: every data-loading page has loading and error handling.
+- M7 persistent rate limit (MongoDB, D-059), M9 auth edge cases (expired/revoked/disabled sessions, `AUTH_CHECK_REVOKED`).
+- H3 (partly) security review: `npm audit fix`, backend 0 production vulnerabilities, more guardrail paraphrases plus an instruction-override guardrail (D-060), paraphrase tests.
+- H4 pilot plan template: `docs/PILOT_PLAN.md`; manual test script: `docs/MANUAL_QA_CHECKLIST.md`.
+
+**Still open (cannot be done from code alone, see the main list below):** L2 (official M-CHAT-R wording check), L5 (pull request),
+M1 (manual QA), M2/M3 (licensed documents and a real-key eval), M4 (docker compose run, with deployment), M8 (analytics aggregation, needs real-MongoDB testing),
+H1 (deployment), H2 (end-to-end browser tests), remaining H3 items (red-team against the real model), H4 (running the pilot), H5–H7 (optional features).
+
+---
+
 ## Rules that never change (read before touching anything)
 1. **Screening aid, not a diagnosis.** Never add wording that diagnoses, names an "autism level", or gives
    medication/dosing advice. `backend/tests/contentSafety.test.js` scans for banned phrases — keep it green.
