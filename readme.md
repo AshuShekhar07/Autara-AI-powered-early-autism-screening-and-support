@@ -124,6 +124,7 @@ python -m app.assistant.debug "Who can see my child's screening?"   # step-by-st
 | Gemini `403 ... denied access` | The key's Google project is blocked: create a key in a **new** project at aistudio.google.com/apikey |
 | Gemini `503 ... high demand` | Temporary; the service retries automatically. Try again or set `LLM_MODEL` to another model |
 | `.env` changes have no effect | Restart that service — `.env` is read at start-up |
+| Blank white page in the browser | Usually an out-of-date copy of the app after an update. Stop every frontend window (Ctrl+C), then in `frontend` run `npm run dev -- --force`, and hard-refresh the browser (Ctrl+Shift+R). If it is still blank press F12 → Console and read the red error; a crash inside a page now shows "Something went wrong on this page" instead of a blank screen |
 
 ### Environment variables
 

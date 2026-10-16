@@ -14,10 +14,10 @@ const { audit } = require('../lib/audit')
 
 const MAX_CSV_LOGS = 5000
 
-/** "Alexandra Demo" → "A.D." — reports never carry the full name. */
+/** "Alexandra Demo" → "A.D." — reports never carry the full name. Only letters count ("River (demo)" → "R.D."). */
 function initialsOf(name) {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
-  return (parts.length ? parts.map((p) => p[0].toUpperCase() + '.').join('') : '?').slice(0, 8)
+  const words = String(name || '').match(/\p{L}[\p{L}'’-]*/gu) || []
+  return (words.length ? words.map((w) => w[0].toUpperCase() + '.').join('') : '?').slice(0, 8)
 }
 
 /**

@@ -161,5 +161,6 @@ describe('report history + audit', () => {
 
   it('initialsOf never leaks more than initials', () => {
     expect(initialsOf('Alexandra Demo')).toBe('A.D.'); expect(initialsOf('  mary jane van dyke ')).toBe('M.J.V.D.'); expect(initialsOf('')).toBe('?')
+    expect(initialsOf('River (demo)')).toBe('R.D.'); expect(initialsOf('(123) !!')).toBe('?')
   })
 })

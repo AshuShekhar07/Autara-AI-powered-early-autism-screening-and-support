@@ -21,12 +21,14 @@ import ChildProfile        from './pages/ChildProfile'
 import Milestones          from './pages/Milestones'
 import PendingVerification from './pages/PendingVerification'
 import RootRedirect        from './components/auth/RootRedirect'
+import RouteErrorBoundary  from './components/RouteErrorBoundary'
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <ChildProvider>
+        <RouteErrorBoundary>
         <Routes>
           {/* ── Public auth routes ── */}
           <Route path="/login"  element={<AuthPage />} />
@@ -158,6 +160,7 @@ export default function App() {
             </div>
           } />
         </Routes>
+        </RouteErrorBoundary>
         </ChildProvider>
       </AuthProvider>
     </BrowserRouter>
