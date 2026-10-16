@@ -10,12 +10,19 @@ M-CHAT-R/F © 2009 Diana Robins, Deborah Fein, & Marianne Barton.
 The instrument is free for clinical, research and educational use, but it must not
 be reworded or altered. Source: https://mchatscreen.com
 
-!! TODO(team) — VERIFY ITEM WORDING !!
-The item texts below were entered from memory while the authoring environment could not
-reach the official instrument (network policy). They MUST be compared word-for-word with
-the official M-CHAT-R/F PDF before any real use. When you have checked all 20 items,
-set ITEMS_VERIFIED_AGAINST_SOURCE = True. Until then the API reports
-`wordingVerified: false` and the UI shows a visible notice.
+Wording verification
+--------------------
+The 20 item texts were compared character by character (whitespace-normalised) with the official
+"M-CHAT-R/F, terminology update March 2025" PDF (file `M-CHAT-R_F_March_2025.v2.pdf`, page 3) and
+are identical; the only difference found was a straight vs curly apostrophe in item 18, now fixed.
+`tests/test_mchatr.py::test_items_match_verified_digest` fails if any item is edited. If the authors
+publish a new version, re-verify and update the digest in that test deliberately.
+
+Terms of use (from the official document): no modification of items, instructions or item order
+without the authors' permission; the instrument must be used in its entirety; the copyright must
+appear with any reproduction; free for clinical, research and educational purposes; reproducing it in
+electronic products/software for use by others requires the authors' permission
+(mchatscreen2009@gmail.com). See docs/MCHATR_TERMS.md.
 """
 from __future__ import annotations
 
@@ -26,7 +33,15 @@ INSTRUMENT_ID = "MCHAT-R"
 COPYRIGHT = "M-CHAT-R/F © 2009 Diana Robins, Deborah Fein, & Marianne Barton."
 DISCLAIMER = "This is a screening aid, not a diagnosis. Please discuss results with a qualified clinician."
 
-ITEMS_VERIFIED_AGAINST_SOURCE = False  # TODO(team): flip to True after word-for-word check
+ITEMS_VERIFIED_AGAINST_SOURCE = True  # checked against the March 2025 official PDF (see module docstring)
+SOURCE_VERSION = "M-CHAT-R/F, terminology update March 2025"
+
+# Official instructions printed above the 20 questions (shown verbatim; do not reword).
+INSTRUCTIONS = (
+    "Please answer these questions about your child. Keep in mind how your child usually behaves. "
+    "If you have seen your child do the behavior a few times, but he or she does not usually do it, "
+    "then please answer no. Please circle yes or no for every question."
+)
 
 # Validated age range of the instrument, in months (inclusive).
 MIN_AGE_MONTHS = 16
@@ -67,7 +82,7 @@ ITEMS: tuple[Item, ...] = (
     Item(15, "Does your child try to copy what you do? (FOR EXAMPLE, wave bye-bye, clap, or make a funny noise when you do)"),
     Item(16, "If you turn your head to look at something, does your child look around to see what you are looking at?"),
     Item(17, "Does your child try to get you to watch him or her? (FOR EXAMPLE, does your child look at you for praise, or say “look” or “watch me”?)"),
-    Item(18, "Does your child understand when you tell him or her to do something? (FOR EXAMPLE, if you don't point, can your child understand “put the book on the chair” or “bring me the blanket”?)"),
+    Item(18, "Does your child understand when you tell him or her to do something? (FOR EXAMPLE, if you don’t point, can your child understand “put the book on the chair” or “bring me the blanket”?)"),
     Item(19, "If something new happens, does your child look at your face to see how you feel about it? (FOR EXAMPLE, if he or she hears a strange or funny noise, or sees a new toy, will he or she look at your face?)"),
     Item(20, "Does your child like movement activities? (FOR EXAMPLE, being swung or bounced on your knee)"),
 )
@@ -96,6 +111,8 @@ def instrument_definition() -> dict:
         "copyright": COPYRIGHT,
         "disclaimer": DISCLAIMER,
         "wordingVerified": ITEMS_VERIFIED_AGAINST_SOURCE,
+        "sourceVersion": SOURCE_VERSION,
+        "instructions": INSTRUCTIONS,
         "ageRangeMonths": {"min": MIN_AGE_MONTHS, "max": MAX_AGE_MONTHS},
         "reverseScoredItems": sorted(REVERSE_SCORED_ITEMS),
         "items": [{"number": i.number, "text": i.text, "domain": item_domain[i.number]} for i in ITEMS],

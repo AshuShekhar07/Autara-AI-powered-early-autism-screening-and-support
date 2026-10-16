@@ -32,10 +32,11 @@ describe('local M-CHAT-R scorer (offline fallback — same official rules as the
     expect(r.domainBreakdown.reduce((n, d) => n + d.atRiskCount, 0)).toBe(20)
     expect(r.domainBreakdown.reduce((n, d) => n + d.totalItems, 0)).toBe(20)
   })
-  it('the built-in definition carries the copyright, 20 items and the unverified-wording flag', () => {
+  it('the built-in definition carries the copyright, 20 items and the verified-wording flag and the official instructions', () => {
     expect(localDefinition.items).toHaveLength(20)
     expect(localDefinition.copyright).toMatch(/Diana Robins/)
-    expect(localDefinition.wordingVerified).toBe(false)
+    expect(localDefinition.wordingVerified).toBe(true)
+    expect(localDefinition.instructions).toMatch(/^Please answer these questions about your child\./)
     expect(localDefinition.domainGroupingNote).toMatch(/not part of the official instrument/)
   })
 })

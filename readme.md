@@ -185,7 +185,7 @@ CI runs all three on every push and pull request (`.github/workflows/ci.yml`).
 
 * **Gemini API key** (and confirm the model names in `.env.example`) — for insights, Ask Autara and embeddings.
 * **Approved reference documents** for the RAG corpus (`ai-service/knowledge/` + `sources.yaml`). Autara ships **no** clinical reference content.
-* **Verify the M-CHAT-R item wording** against the official instrument (`ai-service/app/screening/mchatr.py`, flag `ITEMS_VERIFIED_AGAINST_SOURCE`) — the UI shows a development notice until you do.
+* **Ask the M-CHAT-R/F authors for permission** before any public deployment (electronic reproduction needs it). The 20 items were verified against the official March 2025 document — see [`docs/MCHATR_TERMS.md`](docs/MCHATR_TERMS.md).
 * *(Optional)* a training dataset for the ML probability (`ai-service/data/README.md`) — never synthetic data presented as real.
 * Firebase project + MongoDB instance.
 

@@ -132,6 +132,7 @@ export default function Screening() {
 
         {step === 'questions' && child && (
           <QuestionStep
+            instructions={instrument.instructions}
             item={items[index]} index={index} total={total}
             answer={answers[items[index].number]}
             onChoose={(v) => choose(items[index].number, v)}
@@ -217,7 +218,7 @@ function AgeStep({ child, range, onBack }) {
   )
 }
 
-function QuestionStep({ item, index, total, answer, onChoose, onBack, onNext }) {
+function QuestionStep({ item, index, total, answer, onChoose, onBack, onNext, instructions }) {
   const pct = Math.round((index / total) * 100)
   return (
     <div className="sc-card">
@@ -248,7 +249,9 @@ function QuestionStep({ item, index, total, answer, onChoose, onBack, onNext }) 
           {index === total - 1 ? 'Review answers' : 'Next'}
         </button>
       </div>
-      <p className="sc-hint">Answer based on how your child usually behaves. Your progress is saved on this device while this tab stays open.</p>
+      {/* Official instructions, shown word for word (the authors do not allow rewording). */}
+      <p className="sc-hint">{instructions || 'Answer based on how your child usually behaves.'}</p>
+      <p className="sc-hint">Your progress is saved on this device while this tab stays open.</p>
     </div>
   )
 }

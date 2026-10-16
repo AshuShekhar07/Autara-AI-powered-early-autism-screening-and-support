@@ -112,3 +112,29 @@ def test_invalid_answers_rejected(mutate):
 
 def test_wording_flag_is_reported():
     assert mchatr.instrument_definition()["wordingVerified"] is mchatr.ITEMS_VERIFIED_AGAINST_SOURCE
+
+
+# ── Official-wording guard ────────────────────────────────────────────────────
+# SHA-256 of "<number>|<text>" lines for the 20 items, taken from the official M-CHAT-R/F PDF
+# (terminology update March 2025, page 3). If this test fails you changed an item: the authors do not
+# allow modified items without permission. Only update the digest after re-checking the official document.
+OFFICIAL_ITEMS_SHA256 = "4ac554a0e0612b5729e16892aa06bb2a11dca67520b291147330fc9a8a0a200f"
+OFFICIAL_INSTRUCTIONS = (
+    "Please answer these questions about your child. Keep in mind how your child usually behaves. "
+    "If you have seen your child do the behavior a few times, but he or she does not usually do it, "
+    "then please answer no. Please circle yes or no for every question."
+)
+
+
+def test_items_match_verified_digest():
+    import hashlib
+    blob = "\n".join(f"{i.number}|{i.text}" for i in mchatr.ITEMS)
+    assert hashlib.sha256(blob.encode("utf-8")).hexdigest() == OFFICIAL_ITEMS_SHA256
+
+
+def test_wording_is_marked_verified_and_instructions_are_official():
+    assert mchatr.ITEMS_VERIFIED_AGAINST_SOURCE is True
+    d = mchatr.instrument_definition()
+    assert d["wordingVerified"] is True
+    assert d["instructions"] == OFFICIAL_INSTRUCTIONS
+    assert "March 2025" in d["sourceVersion"]

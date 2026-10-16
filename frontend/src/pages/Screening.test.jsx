@@ -21,10 +21,10 @@ const instrument = {
   domains: [],
 }
 
-function setup(children) {
+function setup(children, instr = instrument) {
   api.get.mockImplementation(async (path) => {
     if (path === '/api/children') return { children }
-    if (path === '/api/screenings/instrument') return { instrument }
+    if (path === '/api/screenings/instrument') return { instrument: instr }
     throw new Error('unexpected ' + path)
   })
   return render(
@@ -109,5 +109,15 @@ describe('Screening wizard', () => {
     expect(await screen.findByText(/not yet been checked/)).toBeInTheDocument()
     expect(screen.getByText(/Diana Robins/)).toBeInTheDocument()
     expect(screen.getByText(/screening aid, not a diagnosis/)).toBeInTheDocument()
+  })
+
+  it('when the wording is verified there is no warning, and the official instructions are shown word for word', async () => {
+    const official = 'Please answer these questions about your child. Keep in mind how your child usually behaves.'
+    setup([{ id: 'c1', name: 'Alex', ageMonths: 22 }], { ...instrument, wordingVerified: true, instructions: official })
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: /Alex/ }))
+    expect(await screen.findByText('Question text 1?')).toBeInTheDocument()
+    expect(screen.queryByText(/not yet been checked/)).not.toBeInTheDocument()
+    expect(screen.getByText(official)).toBeInTheDocument()
   })
 })

@@ -16,7 +16,7 @@ is still open, grouped by effort.
 - H3 (partly) security review: `npm audit fix`, backend 0 production vulnerabilities, more guardrail paraphrases plus an instruction-override guardrail (D-060), paraphrase tests.
 - H4 pilot plan template: `docs/PILOT_PLAN.md`; manual test script: `docs/MANUAL_QA_CHECKLIST.md`.
 
-**Still open (cannot be done from code alone, see the main list below):** L2 (official M-CHAT-R wording check), L5 (pull request),
+**Still open (cannot be done from code alone, see the main list below):** permission email to the M-CHAT-R/F authors (before deployment), L5 (pull request),
 M1 (manual QA), M2/M3 (licensed documents and a real-key eval), M4 (docker compose run, with deployment), M8 (analytics aggregation, needs real-MongoDB testing),
 H1 (deployment), H2 (end-to-end browser tests), remaining H3 items (red-team against the real model), H4 (running the pilot), H5–H7 (optional features).
 
@@ -57,11 +57,7 @@ ai-service `python -m pytest` (venv active). CI runs the same three jobs.
 scanning). Confirm no real key/URI was ever committed. If a key was ever pasted into chat, a screenshot or a
 file, rotate it (Firebase service-account key, Atlas DB user password, Gemini key, `AI_SERVICE_KEY`).
 
-**L2. Verify the M-CHAT-R wording.** The 20 questions in `ai-service/app/screening/mchatr.py` were written
-from memory. Compare each, word for word, with the official M-CHAT-R/F from https://mchatscreen.com (free for
-clinical/research/educational use; keep its attribution and copyright notice). Fix any difference, set
-`ITEMS_VERIFIED_AGAINST_SOURCE = True`, then run `python -m scripts.export_instrument` (regenerates the Node
-fallback JSON) and `python -m pytest`. Add the required attribution to the screening page and readme.
+**L2. ~~Verify the M-CHAT-R wording~~ — done (2026-10-16).** Compared with the official March 2025 PDF; identical; flag set; digest test added. Still to do: **email the authors for permission before any public deployment** (see `docs/MCHATR_TERMS.md`).
 
 **L3. Unit-test the Gemini retry.** `ai-service/app/llm/gemini.py` now retries 429/500/503 (`_with_retry`).
 Add a pytest that fakes an exception with `.code = 503` twice then succeeds (patch `time.sleep`), and one that
