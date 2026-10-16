@@ -87,6 +87,8 @@ def main(argv: list[str] | None = None) -> int:
         if not r["citationsValid"]:
             flags.append("INVALID-CITATION")
         print(f"{r['id']}  {' '.join(flags):45s}  {r['question']}")
+        if r.get("noAnswerOk") is False:   # show what the model said so you can judge whether it was grounded
+            print(f"        answered: {r['answer']}\n        sources : {', '.join(r['sources']) or '-'}")
 
     print(f"\nCorpus chunks: {report['corpusSize']}")
     print(f"Retrieval hits: {report['retrievalHits']}   Citation validity: {report['citationsValid']}   "
