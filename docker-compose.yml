@@ -1,0 +1,61 @@
+# Autara — MongoDB + backend + AI service. The frontend runs on the host: `cd frontend && npm run dev` (port 3000).
+#
+#   cp .env.example .env                       # AI_SERVICE_KEY (+ GEMINI_API_KEY)
+#   cp backend/.env.example backend/.env       # Firebase Admin credentials
+#   docker compose up --build
+#
+# The AI service is INTERNAL: its port is not published to the host. Only the backend can call it,
+# and every request needs the shared X-Internal-Key secret.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  ai-service:
+    build: ./ai-service
+    restart: unless-stopped
+    environment:
+      AI_SERVICE_KEY: ${AI_SERVICE_KEY:?set AI_SERVICE_KEY in .env (see .env.example)}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gemini-3.5-flash}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-gemini-embedding-001}
+    volumes:
+      - ai-storage:/app/storage            # Chroma vector index
+      - ./ai-service/knowledge:/app/knowledge   # approved reference documents (git-ignored contents)
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env                      # Firebase Admin credentials
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/autara
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_KEY: ${AI_SERVICE_KEY:?set AI_SERVICE_KEY in .env (see .env.example)}
+      ALLOWED_ORIGINS: http://localhost:3000
+      PORT: "4000"
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  ai-storage:

@@ -208,3 +208,11 @@
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
+
+.ct-form { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.ct-form label { font-size: .84rem; font-weight: 600; color: var(--ink-secondary); }
+.ct-form input {
+  padding: 10px 12px; border: 1.5px solid var(--border-md); border-radius: var(--r-sm);
+  font: inherit; background: var(--bg-card); color: var(--ink);
+}
+.ct-confirm { display: inline-flex; gap: 8px; }

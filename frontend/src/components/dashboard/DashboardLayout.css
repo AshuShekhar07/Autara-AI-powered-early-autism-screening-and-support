@@ -191,6 +191,7 @@
 /* ── Main content area ── */
 .db-main {
   flex: 1;
+  min-width: 0; /* a flex item must be allowed to shrink below its content, or wide tables push the page sideways */
   margin-left: 230px;
   display: flex;
   flex-direction: column;

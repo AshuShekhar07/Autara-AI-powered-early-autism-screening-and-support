@@ -48,3 +48,9 @@
   max-width: 340px;
   line-height: 1.55;
 }
+
+.rp-list { display: flex; flex-direction: column; margin-top: 8px; }
+.rp-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
+.rp-history { margin-top: 16px; }
+.rp-history__title { font-family: var(--font-ui); font-size: .8rem; font-weight: 700; color: var(--ink-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.rp-history ul { font-size: .82rem; color: var(--ink-muted); display: flex; flex-direction: column; gap: 4px; }

@@ -1,85 +1,87 @@
 const User = require('../models/User')
+const { AppError, ok, created, asyncHandler } = require('../utils/respond')
+const { cleanString, parseDate, requireBodyObject } = require('../utils/validate')
+const { isCareRole } = require('../utils/roles')
+
+const SIGNUP_ROLES = ['caregiver', 'patient', 'therapist', 'clinician'] // admin is never self-service
+
+/** Builds the sanitised roleDetails object for a role, or throws 400. */
+function buildRoleDetails(role, raw) {
+  const details = raw && typeof raw === 'object' ? raw : {}
+
+  if (isCareRole(role)) {
+    const childName = cleanString(details.childName, { max: 120 })
+    const dob = parseDate(details.childDob)
+    if (!childName) throw new AppError(400, 'VALIDATION_ERROR', "Child's name is required.")
+    if (!dob || dob.getTime() > Date.now()) {
+      throw new AppError(400, 'VALIDATION_ERROR', "A valid child date of birth (not in the future) is required.")
+    }
+    return { childName, childDob: dob.toISOString().slice(0, 10) }
+  }
+
+  const orgName = cleanString(details.orgName, { max: 160 })
+  const licenseNumber = cleanString(details.licenseNumber, { max: 80 })
+  if (!orgName || !licenseNumber) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Organisation name and licence number are required.')
+  }
+  return { orgName, licenseNumber }
+}
 
 /**
- * POST /api/auth/signup
+ * POST /api/auth/signup   (requires a valid Firebase ID token)
  *
- * Called by the frontend immediately after Firebase creates the user account.
- * Creates the corresponding User document in MongoDB.
+ * Creates the User document for a Firebase account that was just created.
+ * SECURITY: `uid` and `email` come ONLY from the verified token — never from
+ * the request body — so nobody can create a profile for someone else's UID.
  *
- * Body: { uid, name, email, role, roleDetails }
- * No auth middleware on this route — the Firebase UID is the primary key
- * and the ID token is included for optional logging, not trusted for the uid field.
+ * Body: { name, role, roleDetails }
  */
-async function signup(req, res) {
-  const { uid, name, email, role, roleDetails } = req.body
+const signup = asyncHandler(async (req, res) => {
+  const body = requireBodyObject(req)
+  const uid = req.firebaseUser.uid
+  const email = (req.firebaseUser.email || '').toLowerCase()
 
-  // Basic server-side validation
-  if (!uid || !name || !email || !role) {
-    return res.status(400).json({ error: 'uid, name, email, and role are required.' })
+  if (!email) throw new AppError(400, 'VALIDATION_ERROR', 'Your Firebase account has no email address.')
+
+  const name = cleanString(body.name, { max: 120 })
+  if (!name) throw new AppError(400, 'VALIDATION_ERROR', 'Name is required.')
+
+  if (!SIGNUP_ROLES.includes(body.role)) {
+    throw new AppError(400, 'INVALID_ROLE', `Invalid role. Must be one of: ${SIGNUP_ROLES.join(', ')}.`)
   }
+  const roleDetails = buildRoleDetails(body.role, body.roleDetails)
 
-  const VALID_ROLES = ['caregiver', 'patient', 'therapist', 'clinician']
-  if (!VALID_ROLES.includes(role)) {
-    return res.status(400).json({ error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}.` })
-  }
-
-  // Prevent duplicate registrations
-  const existing = await User.findOne({ $or: [{ uid }, { email: email.toLowerCase() }] })
+  const existing = await User.findOne({ $or: [{ uid }, { email }] }).lean()
   if (existing) {
-    return res.status(409).json({ error: 'An account with this email or UID already exists.' })
+    throw new AppError(409, 'ACCOUNT_EXISTS', 'An account with this email or UID already exists.')
   }
 
-  try {
-    const user = await User.create({ uid, name, email, role, roleDetails: roleDetails || {} })
+  const user = await User.create({ uid, name, email, role: body.role, roleDetails })
 
-    return res.status(201).json({
-      message:  'Account created successfully.',
-      uid:      user.uid,
-      role:     user.role,
-      verified: user.verified,
-    })
-  } catch (err) {
-    // Mongoose duplicate key
-    if (err.code === 11000) {
-      return res.status(409).json({ error: 'An account with this email already exists.' })
-    }
-    console.error('[signup] DB error:', err)
-    return res.status(500).json({ error: 'Failed to create user profile. Please try again.' })
-  }
-}
+  return created(res, {
+    uid: user.uid,
+    role: user.role,
+    verified: user.verified,
+  })
+})
 
 /**
  * GET /api/auth/me
  *
- * Returns the current user's profile from MongoDB.
- * Requires verifyFirebaseToken middleware (populates req.firebaseUser).
- *
- * Response: { uid, name, email, role, verified }
+ * Returns the current user's profile. Available to unverified clinical
+ * accounts too (the frontend needs `verified: false` to show the pending page).
  */
-async function me(req, res) {
-  try {
-    const user = await User.findOne({ uid: req.firebaseUser.uid }).lean()
-
-    if (!user) {
-      return res.status(404).json({ error: 'User profile not found. Please sign up first.' })
-    }
-
-    return res.json({
-      uid:         user.uid,
-      name:        user.name,
-      email:       user.email,
-      role:        user.role,
-      verified:    user.verified,
-      // roleDetails is a Mixed field. For caregivers/patients it holds
-      // { childName, childDob }. For therapists/clinicians it holds
-      // { orgName, licenseNumber }. Sending it here avoids a separate
-      // profile API call on the frontend.
-      roleDetails: user.roleDetails || {},
-    })
-  } catch (err) {
-    console.error('[me] DB error:', err)
-    return res.status(500).json({ error: 'Failed to retrieve user profile.' })
-  }
-}
+const me = asyncHandler(async (req, res) => {
+  const user = req.dbUser
+  return ok(res, {
+    uid:      user.uid,
+    name:     user.name,
+    email:    user.email,
+    role:     user.role,
+    verified: user.verified,
+    // Caregiver / patient: { childName, childDob }. Clinical: { orgName, licenseNumber }.
+    roleDetails: user.roleDetails || {},
+  })
+})
 
 module.exports = { signup, me }

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import './AuthForms.css'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+import { homeRouteFor } from '../../lib/roles'
 
 /* ── Inline field error component ── */
 function FieldError({ id, message }) {
@@ -29,18 +29,10 @@ function validateLogin({ email, password }) {
   return errs
 }
 
-/* ── Redirect helper ── */
-function dashboardRoute(role) {
-  if (!role) return '/dashboard'
-  if (role === 'admin') return '/admin'
-  if (role === 'therapist' || role === 'clinician') return '/clinician-dashboard'
-  return '/dashboard'
-}
-
 export default function LoginForm() {
   const uid = useId()
   const navigate  = useNavigate()
-  const { login, hydrateProfile, user } = useAuth()
+  const { login, hydrateProfile } = useAuth()
 
   const [fields,   setFields]   = useState({ email: '', password: '' })
   const [errors,   setErrors]   = useState({})
@@ -68,17 +60,10 @@ export default function LoginForm() {
     try {
       const cred    = await login(fields.email, fields.password)
       const profile = await hydrateProfile(cred.user)
-      // hydrateProfile sets role in context; read it from the resolved value or wait
-      // We re-fetch profile directly to get the role for immediate redirect
-      const token = await cred.user.getIdToken()
-      const res   = await fetch(`${API_BASE}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (res.ok) {
-        const { role } = await res.json()
-        navigate(dashboardRoute(role), { replace: true })
+      if (profile) {
+        navigate(homeRouteFor(profile.role, profile.verified), { replace: true })
       } else {
-        navigate('/dashboard', { replace: true })
+        setFormErr("You're signed in, but we couldn't load your Autara profile. Please try again in a moment.")
       }
     } catch (err) {
       // Intentionally non-specific — don't reveal whether the account exists

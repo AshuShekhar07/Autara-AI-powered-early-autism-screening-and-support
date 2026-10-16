@@ -62,6 +62,18 @@ const userSchema = new mongoose.Schema(
       type:    Boolean,
       default: defaultVerified,
     },
+
+    /**
+     * Admin review state for clinical accounts (drives the verification queue):
+     *   pending  → waiting for an admin        approved → verified: true
+     *   rejected → an admin said no (or revoked access later)
+     * Undefined for caregiver / patient / admin.
+     */
+    verificationStatus: {
+      type:    String,
+      enum:    ['pending', 'approved', 'rejected'],
+      default: function () { return ['therapist', 'clinician'].includes(this.role) ? 'pending' : undefined },
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: false },

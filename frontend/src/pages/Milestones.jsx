@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/dashboard/DashboardLayout'
-import { useAuth } from '../context/AuthContext'
+import { useChildren } from '../context/ChildContext'
 import './Milestones.css'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ const MILESTONE_AGES = [
       language:  ['Takes turns making sounds with you', 'Blows raspberries', 'Makes squealing noises'],
       social:    ['Knows familiar people', 'Likes to look at self in mirror', 'Laughs'],
       motor:     ['Rolls from tummy to back', 'Pushes up on straight arms on tummy', 'Leans on hands to support self when sitting'],
-      cognitive: ['Puts things in mouth', 'Reaches to grab a toy', 'Closes lips to show doesn't want more food'],
+      cognitive: ['Puts things in mouth', 'Reaches to grab a toy', "Closes lips to show they don't want more food"],
       adaptive:  ['Begins solid foods well when offered', 'Sleeps longer stretches', 'Holds bottle or breast when feeding'],
     },
   },
@@ -129,8 +129,8 @@ function getRelevantAgeGroup(ageMonths) {
  * All age groups remain accessible.
  */
 export default function Milestones() {
-  const { profileData } = useAuth()
-  const childDob    = profileData?.roleDetails?.childDob || null
+  const { activeChild } = useChildren()
+  const childDob    = activeChild?.dob || null
   const ageMonths   = calcAgeMonths(childDob)
   const relevantGroup = getRelevantAgeGroup(ageMonths)
 

@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext'
 import RoleSelector from '../../components/auth/RoleSelector'
 import './AuthForms.css'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+import { api } from '../../lib/api'
+import { homeRouteFor } from '../../lib/roles'
 
 /* ── Inline field error ── */
 function FieldError({ id, message }) {
@@ -117,49 +118,32 @@ export default function SignupForm() {
     try {
       // 1. Create Firebase account
       const cred = await signup(fields.email, fields.password)
-      const token = await cred.user.getIdToken()
 
       // 2. Build role details payload
       const roleDetails = isCareRole(role)
         ? { childName: fields.childName, childDob: fields.childDob }
         : { orgName: fields.orgName, licenseNumber: fields.licenseNumber }
 
-      // 3. POST profile to backend
-      const res = await fetch(`${API_BASE}/api/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // We include the token so the backend can optionally verify it
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          uid:         cred.user.uid,
-          name:        fields.name,
-          email:       fields.email,
-          role,
-          roleDetails,
-        }),
-      })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || 'Account creation failed. Please try again.')
-      }
-
-      // 4. Hydrate auth context
-      await hydrateProfile(cred.user)
+      // 3. POST profile to backend. The API wrapper attaches the Firebase token;
+      //    the server takes uid/email from that token, so we don't send them.
+      await api.post('/api/auth/signup', { name: fields.name, role, roleDetails })
 
       setSuccess(true)
 
-      // Auto-redirect only for immediately-verified roles
+      // Auto-redirect only for immediately-verified roles. Profile is hydrated
+      // right before navigating so the success message isn't pre-empted.
       if (isCareRole(role)) {
-        setTimeout(() => navigate('/dashboard', { replace: true }), 1800)
+        setTimeout(async () => {
+          const profile = await hydrateProfile(cred.user)
+          navigate(homeRouteFor(profile?.role || role, profile?.verified ?? true), { replace: true })
+        }, 1800)
       }
     } catch (err) {
       // Firebase duplicate-email error code
       if (err.code === 'auth/email-already-in-use') {
         setErrors(ev => ({ ...ev, email: 'An account with this email already exists.' }))
       } else {
+        // ApiError from our backend carries a friendly message
         setFormErr(err.message || 'Something went wrong. Please try again.')
       }
     } finally {
@@ -185,6 +169,14 @@ export default function SignupForm() {
                 credentials and send a confirmation email within 1–2 business days.
                 You'll have full access once your account is verified.
               </p>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                style={{ marginTop: 12 }}
+                onClick={async () => { await hydrateProfile(); navigate('/pending-verification', { replace: true }) }}
+              >
+                Continue
+              </button>
             </div>
           </div>
         ) : (

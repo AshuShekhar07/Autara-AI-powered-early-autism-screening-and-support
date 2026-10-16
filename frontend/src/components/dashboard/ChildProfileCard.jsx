@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { initialsOf } from '../../lib/format'
+import { useChildren } from '../../context/ChildContext'
 import './ChildProfileCard.css'
 
 /**
@@ -33,40 +34,24 @@ function formatDate(iso) {
 
 /** Avatar initials derived from a name string. */
 function ChildAvatar({ name }) {
-  const initials = (() => {
-    if (!name) return '?'
-    const parts = name.trim().split(/\s+/)
-    return parts.length >= 2
-      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-      : parts[0].slice(0, 2).toUpperCase()
-  })()
-  return (
-    <div className="cp-avatar" aria-hidden="true">
-      {initials}
-    </div>
-  )
+  return <div className="cp-avatar" aria-hidden="true">{initialsOf(name)}</div>
 }
 
 /**
- * ChildProfileCard
- *
- * Reads childName and childDob from profileData.roleDetails (exposed by
- * AuthContext via the extended GET /api/auth/me response).
- * Falls back to "Not provided" for any missing field — does not invent data.
- *
- * "View Profile" → /child-profile
- * "Edit"         → /settings (existing nav item; currently a stub)
+ * ChildProfileCard — the active child (from the child switcher / GET /api/children).
+ * Falls back to "Not provided" for any missing field — never invents data.
+ * "View Profile" / "Edit" → /child-profile
  */
 export default function ChildProfileCard() {
-  const { profileData, role } = useAuth()
+  const { activeChild, loading } = useChildren()
 
-  // Only caregivers and patients have a child profile
-  if (role !== 'caregiver' && role !== 'patient') return null
+  if (loading && !activeChild) {
+    return <section className="cp-card" aria-busy="true" aria-label="Child profile"><div className="spinner spinner--brand" role="status" /></section>
+  }
 
-  const roleDetails = profileData?.roleDetails || {}
-  const childName   = roleDetails.childName || null
-  const childDob    = roleDetails.childDob  || null
-  const ageLabel    = calcAge(childDob)
+  const childName    = activeChild?.name || null
+  const childDob     = activeChild?.dob  || null
+  const ageLabel     = calcAge(childDob)
   const dobFormatted = formatDate(childDob)
 
   return (
@@ -99,18 +84,6 @@ export default function ChildProfileCard() {
             <div className="cp-card__detail-row">
               <dt>Date of birth</dt>
               <dd>{dobFormatted || <span className="cp-card__not-provided">Not provided</span>}</dd>
-            </div>
-            <div className="cp-card__detail-row">
-              <dt>Relationship</dt>
-              {/* Relationship field not yet in schema; shown when available */}
-              <dd>
-                {roleDetails.relationship
-                  ? roleDetails.relationship
-                  : role === 'caregiver'
-                    ? 'Caregiver'
-                    : <span className="cp-card__not-provided">Not provided</span>
-                }
-              </dd>
             </div>
           </dl>
         </div>
