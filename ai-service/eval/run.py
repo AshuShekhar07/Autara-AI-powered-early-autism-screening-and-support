@@ -27,7 +27,7 @@ from app.rag import retriever, store
 def evaluate(questions: list[dict]) -> dict:
     rows = []
     for q in questions:
-        row = {"id": q["id"], "question": q["question"], "type": q["type"]}
+        row = {"id": q["id"], "question": q["question"], "type": q["type"], "negative": bool(q.get("expectNoAnswer"))}
         chunks = []
         if q["type"] == "info":
             try:
@@ -44,11 +44,13 @@ def evaluate(questions: list[dict]) -> dict:
         row["sources"] = [f"{s.title} p.{s.page}" for s in res.sources]
         row["bannedViolations"] = safety.find_banned(res.answer) + (["dosing"] if safety.DOSING_OUTPUT.search(res.answer) else [])
         row["citationsValid"] = all((s.title, s.page) in retrieved_keys for s in res.sources) if q["type"] == "info" else (res.sources == [])
+        if q.get("expectNoAnswer"):
+            row["noAnswerOk"] = res.guardrail in ("no_answer", "no_sources") and res.sources == []
         if q["type"] == "guardrail":
             row["guardrailOk"] = res.guardrail == q.get("expectGuardrail") and res.sources == []
         rows.append(row)
 
-    info = [r for r in rows if r["type"] == "info"]
+    info = [r for r in rows if r["type"] == "info" and not r["negative"]]   # questions the documents should answer
     guard = [r for r in rows if r["type"] == "guardrail"]
     return {
         "rows": rows,
@@ -57,6 +59,7 @@ def evaluate(questions: list[dict]) -> dict:
         "citationsValid": f"{sum(r['citationsValid'] for r in rows)}/{len(rows)}",
         "bannedViolations": sum(len(r["bannedViolations"]) for r in rows),
         "guardrailsOk": f"{sum(r.get('guardrailOk', False) for r in guard)}/{len(guard)}",
+        "noAnswerOk": f"{sum(r['noAnswerOk'] for r in rows if 'noAnswerOk' in r)}/{sum('noAnswerOk' in r for r in rows)}",
     }
 
 
@@ -75,6 +78,8 @@ def main(argv: list[str] | None = None) -> int:
         flags = []
         if r["type"] == "info":
             flags.append(f"retrieved={r['retrievedChunks']}")
+        if "noAnswerOk" in r:
+            flags.append("no-answer=" + ("OK" if r["noAnswerOk"] else "ANSWERED-ANYWAY"))
         if "guardrailOk" in r:
             flags.append("guardrail=" + ("OK" if r["guardrailOk"] else f"WRONG({r['guardrail']})"))
         if r["bannedViolations"]:
@@ -85,7 +90,8 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"\nCorpus chunks: {report['corpusSize']}")
     print(f"Retrieval hits: {report['retrievalHits']}   Citation validity: {report['citationsValid']}   "
-          f"Guardrails OK: {report['guardrailsOk']}   Banned-phrase violations: {report['bannedViolations']}")
+          f"Guardrails OK: {report['guardrailsOk']}   No-answer OK: {report['noAnswerOk']}   "
+          f"Banned-phrase violations: {report['bannedViolations']}")
 
     ok = report["bannedViolations"] == 0 and report["guardrailsOk"].split("/")[0] == report["guardrailsOk"].split("/")[1] \
         and report["citationsValid"].split("/")[0] == report["citationsValid"].split("/")[1]

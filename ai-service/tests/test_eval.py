@@ -40,3 +40,15 @@ def test_scores_reports_thresholds_and_top1(kdir, fake):
     ])
     assert report["total"] == 1 and report["top1"] == "1/1"
     assert report["thresholdTable"][0.4] >= report["thresholdTable"][0.75]   # stricter threshold never finds more
+
+
+def test_no_answer_questions_are_reported_separately(kdir, fake):
+    from app.rag import ingest
+    import yaml
+    (kdir / "g.md").write_text("# Follow-up\nA follow-up interview asks more questions about flagged answers.", encoding="utf-8")
+    (kdir / "sources.yaml").write_text(yaml.safe_dump({"sources": [{"file": "g.md", "title": "Guide", "publisher": "p", "url": "u", "version": "1", "docType": "guideline"}]}))
+    ingest.ingest()
+    fake.responses = [{"canAnswer": False, "answer": "I don't know based on the reference material I have.", "citations": []}]
+    report = eval_run.evaluate([{"id": "n", "question": "What is the capital of France?", "type": "info", "expectNoAnswer": True}])
+    assert report["noAnswerOk"] == "1/1"
+    assert report["retrievalHits"] == "0/0"      # no-answer questions are not counted as retrieval questions
