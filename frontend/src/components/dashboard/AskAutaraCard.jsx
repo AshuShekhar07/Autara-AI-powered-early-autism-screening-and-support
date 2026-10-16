@@ -8,6 +8,7 @@ const GUARDRAIL_LABEL = {
   urgent_safety: 'Urgent safety',
   medication: 'Medication',
   diagnosis: 'Not a diagnosis',
+  instruction_override: 'Please rephrase',
   no_sources: 'No reference material yet',
   no_answer: "I don't know",
 }

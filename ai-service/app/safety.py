@@ -61,13 +61,24 @@ URGENT = re.compile(
 
 MEDICATION = re.compile(
     r"\b(?:medicat\w*|medicine|drug|dose|dosage|dosing|mg|mcg|milligram\w*|prescri\w+|risperidone|aripiprazole|"
-    r"melatonin|ritalin|methylphenidate|antipsychotic\w*|ssri|supplement\w*)\b", re.IGNORECASE)
+    r"melatonin|ritalin|methylphenidate|antipsychotic\w*|ssri|supplement\w*|pills?|capsules?|sedat\w*|"
+    r"sleeping aids?|tranquili[sz]\w*)\b|"
+    r"\bput\b.{0,15}\bin\b.{0,10}\b(?:his|her|their|the)\b.{0,10}\b(?:food|drink|milk|juice)\b", re.IGNORECASE)
 
 DIAGNOSIS = re.compile(
     r"(?:\b(?:does|do|did|is|are|could|can|might|will)\b.{0,40}\b(?:have|has|having|be|been)\b.{0,25}\b(?:autism|asd|autistic)\b)|"
     r"\b(?:diagnos\w+)\b.{0,30}\b(?:my|our|his|her|their)\b|"
     r"\b(?:what|which)\b.{0,20}\b(?:level|severity|stage)\b|"
-    r"\b(?:is|are)\b.{0,15}\b(?:autistic)\b", re.IGNORECASE)
+    r"\b(?:is|are)\b.{0,15}\b(?:autistic)\b|"
+    r"\b(?:on|in)\s+the\s+(?:autism\s+)?spectrum\b|"
+    r"\b(?:say|tell me|state|write|confirm|admit)\b.{0,40}\b(?:has|have|is|are)\b.{0,25}\b(?:autism|asd|autistic)\b", re.IGNORECASE)
+
+# Attempts to override Ask Autara's rules (prompt injection in the question itself).
+INSTRUCTION_OVERRIDE = re.compile(
+    r"\b(?:ignore|disregard|forget|override)\b.{0,25}\b(?:previous|prior|above|earlier|all|your|these|the)\b.{0,25}\b(?:instructions?|rules?|guidelines?|prompts?)\b|"
+    r"\b(?:reveal|show|print|repeat)\b.{0,25}\b(?:system prompt|your prompt|your instructions)\b|"
+    r"\b(?:pretend|act)\b.{0,12}\b(?:to be|as|you are)\b|"
+    r"\byou are now\b|\bjailbreak\b|\bdeveloper mode\b", re.IGNORECASE)
 
 # Output-side: actual doses must never appear in an answer (a number + unit, or "take 2 tablets").
 DOSING_OUTPUT = re.compile(

@@ -11,6 +11,8 @@ const limit = rateLimit({
   max: Number(process.env.ASK_RATE_LIMIT_PER_HOUR) || 20,
   windowMs: 60 * 60 * 1000,
   key: (req) => req.dbUser.uid,
+  store: 'mongo',        // survives restarts, shared across instances (D-059)
+  name: 'ask',
 })
 
 router.post('/ask', verifyFirebaseToken, requireRole(CARE_ROLES), limit, askAutara)

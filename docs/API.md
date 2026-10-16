@@ -116,7 +116,7 @@ Status lifecycle (one place: `backend/lib/screeningStatus.js`):
 | `POST /api/insights/generate` | clinician | `{ screeningId }`. Sends minimal, name-free evidence to the AI service. Stores `generated` or `failed` (reason codes only). `503` if the AI service is down. Audited `INSIGHT_GENERATED` |
 | `GET /api/insights?screeningId=` | care roles, clinical | Clinician: all. Therapist: approved (full). Caregiver: approved, **`caregiverSummary` only** |
 | `POST /api/insights/:id/approve` | clinician | Only `generated` insights; makes the summary visible to the caregiver; audited `INSIGHT_APPROVED` |
-| `POST /api/assistant/ask` | care roles | `{ question (≤500 chars), childId? }` → `{ answer, sources[], guardrail, usedChildContext, disclaimer }`. With `childId`, only the latest **reviewed** tier + flagged areas are shared. Rate limited (20/h) |
+| `POST /api/assistant/ask` | care roles | `{ question (≤500 chars), childId? }` → `{ answer, sources[], guardrail, usedChildContext, disclaimer }`. With `childId`, only the latest **reviewed** tier + flagged areas are shared. Rate limited (20/h, stored in MongoDB). `guardrail` is one of `urgent_safety`, `medication`, `diagnosis`, `instruction_override`, `no_sources`, `no_answer`, `unavailable`, `validation_failed` or null |
 
 ## Reports
 

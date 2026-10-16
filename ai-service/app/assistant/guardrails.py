@@ -16,6 +16,10 @@ DIAGNOSIS_MESSAGE = (
     "not a diagnosis. A screening result only suggests whether a professional evaluation is recommended. "
     "Please discuss your questions with a qualified clinician."
 )
+OVERRIDE_MESSAGE = (
+    "I can only answer general questions about screening and Autara from the approved reference material, "
+    "and I can't change how I work. Please ask your question in plain words, or ask your child's clinician."
+)
 NO_SOURCES_MESSAGE = (
     "No reference material has been loaded into Autara yet, so I can't answer from trusted sources. "
     "Please ask your child's clinician, or check back once reference material has been added."
@@ -36,4 +40,6 @@ def pre_check(question: str) -> tuple[str, str] | None:
         return "medication", MEDICATION_MESSAGE
     if safety.DIAGNOSIS.search(question):
         return "diagnosis", DIAGNOSIS_MESSAGE
+    if safety.INSTRUCTION_OVERRIDE.search(question):
+        return "instruction_override", OVERRIDE_MESSAGE
     return None

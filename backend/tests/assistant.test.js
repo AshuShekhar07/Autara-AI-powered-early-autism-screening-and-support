@@ -13,7 +13,7 @@ afterAll(disconnectTestDb)
 
 let childId
 beforeEach(async () => {
-  await clearDb(); jest.resetAllMocks(); limit.reset()
+  await clearDb(); jest.resetAllMocks(); await limit.reset()
   aiClient.ask.mockResolvedValue({ answer: 'From the guide.', sources: [{ title: 'Guide', publisher: 'P', url: 'u', version: '1', page: 2, section: '' }], guardrail: null })
   await makeUser('cg1', 'caregiver'); await makeUser('cg2', 'caregiver'); await makeUser('cl1', 'clinician', { verified: true })
   childId = String((await makeChild('cg1', { name: 'Alexandra Demo' }))._id)
@@ -100,5 +100,29 @@ describe('rateLimit window', () => {
     expect(run().code).toBe('RATE_LIMITED')
     t = 1001
     expect(run()).toBeUndefined()
+  })
+})
+
+describe('rateLimit with the Mongo store', () => {
+  const mk = (t) => rateLimit({ max: 2, windowMs: 1000, key: () => 'u1', now: () => t.v, store: 'mongo', name: 'unit' })
+  const run = (limiter) => new Promise((resolve) => limiter({}, { set() {} }, (e) => resolve(e)))
+
+  it('counts requests in the database (so a new limiter instance — e.g. after a restart — still sees them)', async () => {
+    const t = { v: 5000 }
+    await run(mk(t)); await run(mk(t))
+    const err = await run(mk(t))           // third request through a *fresh* limiter instance
+    expect(err.code).toBe('RATE_LIMITED')
+    expect(err.status || err.statusCode).toBe(429)
+  })
+
+  it('lets requests through again after the window and keeps users separate', async () => {
+    const t = { v: 5000 }
+    const a = mk(t)
+    await run(a); await run(a)
+    expect((await run(a)).code).toBe('RATE_LIMITED')
+    t.v = 6100
+    expect(await run(a)).toBeUndefined()
+    const other = rateLimit({ max: 2, windowMs: 1000, key: () => 'u2', now: () => t.v, store: 'mongo', name: 'unit' })
+    expect(await run(other)).toBeUndefined()
   })
 })
