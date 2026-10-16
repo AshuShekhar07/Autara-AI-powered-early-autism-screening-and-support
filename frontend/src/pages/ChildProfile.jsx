@@ -33,6 +33,14 @@ function formatDate(iso) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+/** Values match the API (`sex` is optional: female | male | other). */
+const SEX_OPTIONS = [
+  { value: '',       label: 'Prefer not to say' },
+  { value: 'female', label: 'Female' },
+  { value: 'male',   label: 'Male' },
+  { value: 'other',  label: 'Other' },
+]
+
 function ChildAvatar({ name }) {
   return <div className="cppage-avatar" aria-hidden="true">{initialsOf(name)}</div>
 }
