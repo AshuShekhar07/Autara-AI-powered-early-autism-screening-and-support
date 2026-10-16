@@ -3,6 +3,9 @@
 This folder feeds Autara's retrieval-augmented explanations ("insights") and **Ask Autara**.
 **Autara does not ship any clinical reference content.** The team adds approved source documents here.
 
+**Easiest way:** `python -m app.rag.add_source --file <path> --title ... --publisher ... --url ... --version ... --type fact-sheet` — see [`docs/REFERENCE_SOURCES.md`](../../docs/REFERENCE_SOURCES.md).
+
+By hand:
 1. Put an approved PDF / Markdown / text file in this folder (file contents are git-ignored).
 2. Add an entry for it in `sources.yaml` (title, publisher, URL, version, docType). Unlisted files are NOT ingested.
 3. Build the index (needs `GEMINI_API_KEY` for embeddings):

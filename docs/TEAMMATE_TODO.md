@@ -16,6 +16,8 @@ is still open, grouped by effort.
 - H3 (partly) security review: `npm audit fix`, backend 0 production vulnerabilities, more guardrail paraphrases plus an instruction-override guardrail (D-060), paraphrase tests.
 - H4 pilot plan template: `docs/PILOT_PLAN.md`; manual test script: `docs/MANUAL_QA_CHECKLIST.md`.
 
+**Tools added for the open items:** `docs/REFERENCE_SOURCES.md` (add documents with `app.rag.add_source`), `docs/EVALUATION.md` (`eval.scores`, `eval.run`, `eval.redteam`), `docs/MANUAL_QA_CHECKLIST.md`.
+
 **Still open (cannot be done from code alone, see the main list below):** permission email to the M-CHAT-R/F authors (before deployment), L5 (pull request),
 M1 (manual QA), M2/M3 (licensed documents and a real-key eval), M4 (docker compose run, with deployment), M8 (analytics aggregation, needs real-MongoDB testing),
 H1 (deployment), H2 (end-to-end browser tests), remaining H3 items (red-team against the real model), H4 (running the pilot), H5–H7 (optional features).

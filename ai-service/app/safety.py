@@ -71,6 +71,7 @@ DIAGNOSIS = re.compile(
     r"\b(?:what|which)\b.{0,20}\b(?:level|severity|stage)\b|"
     r"\b(?:is|are)\b.{0,15}\b(?:autistic)\b|"
     r"\b(?:on|in)\s+the\s+(?:autism\s+)?spectrum\b|"
+    r"\b(?:give|tell|provide|make)\b.{0,12}\b(?:me|us)\b.{0,12}\ba\s+diagnos\w+|"
     r"\b(?:say|tell me|state|write|confirm|admit)\b.{0,40}\b(?:has|have|is|are)\b.{0,25}\b(?:autism|asd|autistic)\b", re.IGNORECASE)
 
 # Attempts to override Ask Autara's rules (prompt injection in the question itself).
