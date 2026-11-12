@@ -2,6 +2,7 @@
 
     cd ai-service && python -m app.rag.ingest          # ingest everything listed in sources.yaml
     python -m app.rag.ingest --reset                    # wipe the index first
+    python -m app.rag.ingest --backup                   # build the OFFLINE backup index (no API key needed)
 
 Pipeline: sources.yaml → load (PDF pages / Markdown) → clean → chunk (~600 tokens, 80 overlap)
 → metadata → embed → Chroma.
@@ -135,8 +136,8 @@ def build_chunks(src: dict, kdir: Path) -> list[dict]:
     return chunks
 
 
-def ingest(reset: bool = False) -> Report:
-    from app.llm.factory import get_provider
+def ingest(reset: bool = False, backup: bool = False) -> Report:
+    from app.llm import factory
 
     kdir = config.knowledge_dir()
     report = Report()
@@ -147,7 +148,7 @@ def ingest(reset: bool = False) -> Report:
         if f.suffix.lower() in SUPPORTED and f.name not in listed and f.name.lower() != "readme.md":
             report.warnings.append(f"{f.name} is not listed in sources.yaml — skipped (add it once approved).")
 
-    collection = store.get_collection()
+    collection = store.get_collection(backup)
     if reset and collection.count():
         collection.delete(ids=collection.get()["ids"])
 
@@ -177,7 +178,7 @@ def ingest(reset: bool = False) -> Report:
 
         to_add = [c for c in chunks if c["id"] not in old_ids]  # unchanged chunks are not re-embedded
         if to_add:
-            provider = provider or get_provider()
+            provider = provider or (factory.get_local_provider() if backup else factory.get_provider())
             vectors = provider.embed([c["text"] for c in to_add], "document")
             collection.upsert(
                 ids=[c["id"] for c in to_add],
@@ -194,16 +195,18 @@ def ingest(reset: bool = False) -> Report:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Ingest approved reference documents into the vector index.")
     ap.add_argument("--reset", action="store_true", help="delete everything in the index first")
+    ap.add_argument("--backup", action="store_true", help="build the offline backup index (local model, no API key)")
     args = ap.parse_args(argv)
     try:
-        report = ingest(reset=args.reset)
+        report = ingest(reset=args.reset, backup=args.backup)
     except LLMError as exc:
         print(f"Embedding failed ({exc.code}): {exc}")
         return 1
     for w in report.warnings:
         print(f"warning: {w}")
     print(f"Ingested {report.files_ingested} file(s): {report.chunks_total} chunks "
-          f"({report.chunks_added} new, {report.chunks_removed} removed). Index size: {store.corpus_size()}")
+          f"({report.chunks_added} new, {report.chunks_removed} removed). "
+          f"{'Backup' if args.backup else 'Main'} index size: {store.corpus_size(args.backup)}")
     if report.files_ingested == 0:
         print("Nothing to ingest — the knowledge folder has no approved sources yet (see knowledge/README.md).")
     return 0

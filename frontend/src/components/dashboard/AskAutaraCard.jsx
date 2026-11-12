@@ -10,6 +10,7 @@ const GUARDRAIL_LABEL = {
   medication: 'Medication',
   diagnosis: 'Not a diagnosis',
   instruction_override: 'Please rephrase',
+  sources_only: 'Quoted from approved sources',
   no_sources: 'No reference material yet',
   no_answer: "I don't know",
 }
@@ -69,7 +70,7 @@ export default function AskAutaraCard({ full = false }) {
               {t.a && (
                 <div className={`ask-a${t.a.guardrail === 'urgent_safety' ? ' ask-a--urgent' : ''}`} role={t.a.guardrail === 'urgent_safety' ? 'alert' : undefined}>
                   {t.a.guardrail && <span className="ask-tag">{GUARDRAIL_LABEL[t.a.guardrail] || 'Note'}</span>}
-                  <p>{t.a.answer}</p>
+                  <p className={t.a.guardrail === 'sources_only' ? 'ask-quotes' : undefined}>{t.a.answer}</p>
                   {t.a.sources.length > 0 ? (
                     <ul className="ask-sources" aria-label="Sources">
                       {t.a.sources.map((s, j) => (

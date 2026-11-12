@@ -36,17 +36,24 @@ def build_query(flagged_areas: list[str], behaviour_patterns: list[str]) -> str:
     return ". ".join(parts) or "early developmental screening follow-up"
 
 
-def retrieve(query: str, k: int | None = None, min_similarity: float | None = None) -> list[Chunk]:
-    """Returns [] for an empty / missing corpus — callers must cope with that."""
-    from app.llm.factory import get_provider
+def retrieve(query: str, k: int | None = None, min_similarity: float | None = None, backup: bool = False) -> list[Chunk]:
+    """Returns [] for an empty / missing corpus — callers must cope with that.
+
+    backup=True searches the local-model index (used by the sources-only fallback) with its own threshold.
+    """
+    from app.llm import factory
 
     k = k or config.rag_top_k()
-    threshold = config.rag_min_similarity() if min_similarity is None else min_similarity
+    if min_similarity is not None:
+        threshold = min_similarity
+    else:
+        threshold = config.rag_backup_min_similarity() if backup else config.rag_min_similarity()
 
-    if store.corpus_size() == 0:
+    if store.corpus_size(backup) == 0:
         return []
-    vector = get_provider().embed([query], "query")[0]
-    res = store.get_collection().query(query_embeddings=[vector], n_results=k)
+    provider = factory.get_local_provider() if backup else factory.get_provider()
+    vector = provider.embed([query], "query")[0]
+    res = store.get_collection(backup).query(query_embeddings=[vector], n_results=k)
 
     chunks = []
     for cid, text, meta, dist in zip(res["ids"][0], res["documents"][0], res["metadatas"][0], res["distances"][0]):

@@ -76,6 +76,7 @@
 .ask-turn { display: flex; flex-direction: column; gap: 6px; }
 .ask-q { align-self: flex-end; background: var(--brand); color: #fff; padding: 8px 14px; border-radius: 14px 14px 2px 14px; max-width: 85%; font-size: .9rem; }
 .ask-a { align-self: flex-start; background: var(--bg-card); border: 1px solid var(--border); padding: 10px 14px; border-radius: 14px 14px 14px 2px; max-width: 92%; font-size: .9rem; display: flex; flex-direction: column; gap: 6px; }
+.ask-quotes { white-space: pre-line; }   /* backup answers: keep the line breaks between quoted passages */
 .ask-a--urgent { border: 2px solid #B5651D; background: var(--notice-bg); }
 .ask-a--error { color: var(--error-text); background: var(--error-bg); border-color: var(--error-border); }
 .ask-tag { align-self: flex-start; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--notice-text); }

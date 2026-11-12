@@ -40,3 +40,11 @@ def fake(monkeypatch):
     provider = FakeProvider()
     monkeypatch.setattr("app.llm.factory.get_provider", lambda: provider)
     return provider
+
+
+@pytest.fixture
+def fake_local(monkeypatch):
+    """Installs a FakeProvider as the OFFLINE embedder used by the backup (sources-only) index."""
+    provider = FakeProvider()
+    monkeypatch.setattr("app.llm.factory.get_local_provider", lambda: provider)
+    return provider

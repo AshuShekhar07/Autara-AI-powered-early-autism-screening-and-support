@@ -10,15 +10,16 @@ import chromadb
 from app import config
 
 COLLECTION = "autara_reference"
+BACKUP_COLLECTION = "autara_reference_local"   # same documents, embedded by the local model (a different vector size)
 
 
-def get_collection():
+def get_collection(backup: bool = False):
     client = chromadb.PersistentClient(path=str(config.chroma_dir()))
-    return client.get_or_create_collection(COLLECTION, metadata={"hnsw:space": "cosine"})
+    return client.get_or_create_collection(BACKUP_COLLECTION if backup else COLLECTION, metadata={"hnsw:space": "cosine"})
 
 
-def corpus_size() -> int:
+def corpus_size(backup: bool = False) -> int:
     try:
-        return get_collection().count()
+        return get_collection(backup).count()
     except Exception:
         return 0

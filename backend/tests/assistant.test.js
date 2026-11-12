@@ -35,6 +35,19 @@ describe('POST /api/assistant/ask', () => {
     expect(aiClient.ask).not.toHaveBeenCalled()
   })
 
+  it('passes backup (sources-only) answers through and does not claim the child context was used', async () => {
+    const review2 = await Screening.create({
+      childId, submittedBy: 'cg1', childAgeMonths: 22, answers: { 1: 'no' }, riskScore: 4, riskTier: 'medium', atRiskItems: [1],
+      domainBreakdown: [], status: 'REVIEWED',
+    })
+    expect(review2.status).toBe('REVIEWED')
+    aiClient.ask.mockResolvedValue({ answer: 'Quoted passages.', sources: [{ title: 'Guide', publisher: 'P', url: 'u', version: '1', page: null, section: '' }], guardrail: 'sources_only', contextUsed: false })
+    const res = await http.post('/api/assistant/ask', 'cg1').send({ question: 'Who can see a result?', childId })
+    expect(res.status).toBe(200)
+    expect(res.body.data).toMatchObject({ guardrail: 'sources_only', usedChildContext: false })
+    expect(aiClient.ask.mock.calls[0][0].context).toBeDefined()   // it was offered; the AI service said it did not use it
+  })
+
   it('always returns sources, the disclaimer and passes guardrail results through', async () => {
     const res = await http.post('/api/assistant/ask', 'cg1').send({ question: 'What is a follow-up interview?' })
     expect(res.status).toBe(200)

@@ -9,3 +9,9 @@ def get_provider() -> LLMProvider:
         from app.llm import gemini
         return gemini.build()
     raise LLMError("LLM_NOT_CONFIGURED", f"Unknown LLM_PROVIDER '{name}'. Supported: gemini.")
+
+
+def get_local_provider() -> LLMProvider:
+    """The offline embedder used by the backup index. It cannot write answers."""
+    from app.llm import local
+    return local.build()

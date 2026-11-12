@@ -41,4 +41,4 @@ def test_ask_guardrail_over_http(client, auth):
 def test_ingest_endpoint_with_empty_folder(client, auth):
     body = client.post("/ingest", headers=auth).json()
     assert body["filesIngested"] == 0 and body["indexSize"] == 0
-    assert client.get("/corpus", headers=auth).json() == {"indexSize": 0}
+    assert client.get("/corpus", headers=auth).json() == {"indexSize": 0, "backupIndexSize": 0}

@@ -48,7 +48,7 @@ const askAutara = asyncHandler(async (req, res) => {
     answer: result.answer,
     sources: result.sources || [],          // always present
     guardrail: result.guardrail || null,
-    usedChildContext: !!payload.context,
+    usedChildContext: !!payload.context && result.contextUsed !== false, // backup (quotes-only) answers ignore the child's context
     disclaimer: DISCLAIMER,
   })
 })

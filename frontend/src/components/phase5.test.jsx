@@ -106,6 +106,22 @@ describe('AskAutaraCard', () => {
     expect(sources).toHaveTextContent('Demo Publisher, 2024, p. 4')
   })
 
+  it('shows backup answers as quoted passages with their label and keeps the sources list', async () => {
+    api.post.mockResolvedValue({
+      answer: 'I can\'t write a full answer right now.\n\n1. “Quoted passage.”\n— Approved Guide (Demo Publisher, 2024)',
+      sources: [{ title: 'Approved Guide', publisher: 'Demo Publisher', url: 'javascript:alert(1)', version: '2024', page: null }], guardrail: 'sources_only',
+    })
+    render(<AskAutaraCard />)
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Your question'), 'Who can see a result?')
+    await user.click(screen.getByRole('button', { name: 'Ask' }))
+    expect(await screen.findByText('Quoted from approved sources')).toBeInTheDocument()
+    expect(screen.getByText(/Quoted passage/)).toHaveClass('ask-quotes')
+    const sources = screen.getByRole('list', { name: 'Sources' })
+    expect(within(sources).queryByRole('link')).toBeNull()          // an unsafe address is shown as plain text
+    expect(sources).toHaveTextContent('Approved Guide')
+  })
+
   it('can opt out of sharing child context', async () => {
     api.post.mockResolvedValue({ answer: 'ok', sources: [], guardrail: null })
     render(<AskAutaraCard />)

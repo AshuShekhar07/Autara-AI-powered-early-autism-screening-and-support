@@ -70,3 +70,20 @@ def rag_top_k() -> int:
 def rag_min_similarity() -> float:
     # Cosine similarity below this is dropped. Tune with `python -m eval.run` once a corpus exists.
     return float(os.environ.get("RAG_MIN_SIMILARITY", "0.55"))
+
+
+# ── Ask Autara backup ("sources-only" mode: local embeddings, no LLM, no key, no quota) ──
+def ask_mode() -> str:
+    """auto = Gemini first, quote the approved sources if Gemini fails | local = never call Gemini | gemini = no fallback."""
+    mode = os.environ.get("ASK_MODE", "auto").strip().lower()
+    return mode if mode in ("auto", "local", "gemini") else "auto"
+
+
+def rag_backup_min_similarity() -> float:
+    # The small local model scores lower than Gemini's for the same match, so it needs its own threshold.
+    # Calibrate with:  python -m app.assistant.debug --local "your question"
+    return float(os.environ.get("RAG_BACKUP_MIN_SIMILARITY", "0.30"))
+
+
+def backup_max_passages() -> int:
+    return int(os.environ.get("ASK_BACKUP_MAX_PASSAGES", "3"))

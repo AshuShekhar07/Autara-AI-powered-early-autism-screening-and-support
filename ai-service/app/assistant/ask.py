@@ -6,8 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app import safety
-from app.assistant import guardrails
+from app import config, safety
+from app.assistant import excerpts, guardrails
 from app.insights.generator import load_prompt
 from app.llm.base import LLMError
 from app.rag import retriever
@@ -53,6 +53,7 @@ class AskResponse(BaseModel):
     guardrail: str | None = None
     promptVersion: str = PROMPT_NAME
     model: str = ""
+    contextUsed: bool | None = None   # False when the answer ignored the child's screening context (sources-only mode)
 
 
 def _source(c: Chunk) -> SourceOut:
@@ -91,12 +92,51 @@ def _validate(raw: str, n_chunks: int) -> tuple[dict | None, str]:
     return {"answer": answer.strip(), "canAnswer": can, "citations": cites}, ""
 
 
-def ask(req: AskRequest, provider=None, retrieve=None) -> AskResponse:
-    from app.llm.factory import get_provider
+SOURCES_ONLY_PROMPT = "sources_only_v1"
 
+
+def _sources_only(req: AskRequest, backup_retrieve=None) -> AskResponse | None:
+    """Backup answer: quotes from the approved documents, found with the LOCAL embedder (no key, no quota).
+
+    Returns None when the backup index has not been built or the local model cannot run, so the caller can
+    fall back to the plain "unavailable" message.
+    """
+    from app.rag import store
+
+    if store.corpus_size(backup=True) == 0:
+        return None
+    try:
+        chunks = (backup_retrieve or (lambda q: retriever.retrieve(q, backup=True)))(req.question)
+    except LLMError:
+        return None
+    used = excerpts.pick(chunks, req.question, config.backup_max_passages())
+    if not used:
+        return AskResponse(answer=guardrails.DONT_KNOW_MESSAGE, sources=[], guardrail="no_answer",
+                           model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False)
+    unique = list({(c.source, c.page, c.section): c for c, _ in used}.values())
+    return AskResponse(answer=excerpts.compose(used), sources=[_source(c) for c in unique], guardrail="sources_only",
+                       model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False)
+
+
+def ask(req: AskRequest, provider=None, retrieve=None, backup_retrieve=None) -> AskResponse:
+    """ASK_MODE=auto (default): Gemini first, quote the sources if Gemini is unavailable. local: never call Gemini. gemini: no backup."""
     blocked = guardrails.pre_check(req.question)
     if blocked:
         return AskResponse(answer=blocked[1], sources=[], guardrail=blocked[0])
+
+    mode = config.ask_mode()
+    if mode == "local":
+        return _sources_only(req, backup_retrieve) or AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="unavailable")
+
+    response = _ask_with_model(req, provider, retrieve)
+    # "no_sources" counts too: the main index may be empty only because embedding it needed the key that just failed
+    if mode == "auto" and response.guardrail in ("unavailable", "no_sources"):
+        return _sources_only(req, backup_retrieve) or response
+    return response
+
+
+def _ask_with_model(req: AskRequest, provider=None, retrieve=None) -> AskResponse:
+    from app.llm.factory import get_provider
 
     retrieve = retrieve or retriever.retrieve
     try:
