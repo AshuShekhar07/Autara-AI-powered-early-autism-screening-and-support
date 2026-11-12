@@ -56,6 +56,18 @@ describe('clinician review workflow', () => {
     expect(await AuditLog.countDocuments({ action: 'SCREENING_ANNOTATED' })).toBe(1)
   })
 
+  it('a mistaken override can be set back to the questionnaire tier (original stays on record)', async () => {
+    const child = await world(); const s = await makeScreening(child._id, { tier: 'medium', score: 4 })
+    await http.post(`/api/screenings/${s._id}/override`, 'cl1').send({ riskTier: 'high', reason: 'Clicked the wrong option' })
+    expect((await http.post(`/api/screenings/${s._id}/override`, 'cl1').send({ riskTier: 'high', reason: 'again the same' })).body.error.code).toBe('NO_CHANGE')
+    const back = await http.post(`/api/screenings/${s._id}/override`, 'cl1').send({ riskTier: 'medium', reason: 'Restoring the questionnaire tier' })
+    expect(back.status).toBe(200)
+    expect(back.body.data.screening.effectiveRiskTier).toBe('medium')
+    expect(back.body.data.screening.riskTier).toBe('medium')
+    const logs = await AuditLog.find({ action: 'SCREENING_OVERRIDDEN' }).sort({ createdAt: 1 })
+    expect(logs.map((l) => l.meta)).toEqual([{ from: 'medium', to: 'high' }, { from: 'high', to: 'medium' }])
+  })
+
   it('override needs a reason, stores both values, audits from→to', async () => {
     const child = await world(); const s = await makeScreening(child._id, { tier: 'high', score: 9 })
     expect((await http.post(`/api/screenings/${s._id}/override`, 'cl1').send({ riskTier: 'medium' })).body.error.code).toBe('REASON_REQUIRED')

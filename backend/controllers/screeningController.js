@@ -23,7 +23,8 @@ function validateAnswers(raw) {
   const clean = {}
   for (const [key, value] of Object.entries(raw)) {
     const n = Number(key)
-    if (!Number.isInteger(n) || n < 1 || n > ITEM_COUNT) {
+    // Only the plain keys "1".."20": Number() also accepts "1.0", "0x2", "1e0" or " 1", which would overwrite a real answer.
+    if (!/^[1-9]\d?$/.test(key) || n < 1 || n > ITEM_COUNT) {
       throw new AppError(400, 'INVALID_ANSWERS', `Unknown item "${key}". Items are numbered 1–${ITEM_COUNT}.`)
     }
     const v = typeof value === 'string' ? value.trim().toLowerCase() : null

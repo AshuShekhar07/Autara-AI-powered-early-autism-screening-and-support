@@ -5,6 +5,7 @@
   3. a reference does not match a retrieved chunk
   4. any text matches a banned diagnostic pattern (app/safety.py)
   5. `uncertainty` is empty
+  6. any text contains a medication dose (e.g. injected through a behaviour note)
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ from pydantic import ValidationError
 
 from app.insights.schema import InsightOut, InsightRequest
 from app.rag.retriever import Chunk
-from app.safety import find_banned
+from app.safety import DOSING_OUTPUT, find_banned
 
 
 def evidence_ids(req: InsightRequest) -> dict[str, set[str]]:
@@ -65,6 +66,8 @@ def validate_insight(raw: str, allowed: dict[str, set[str]], chunks: list[Chunk]
     banned = find_banned(insight.all_text())
     if banned:
         errors.append("BANNED_PHRASE:" + ",".join(banned))
+    if DOSING_OUTPUT.search(insight.all_text()):
+        errors.append("DOSING_CONTENT")
 
     return (None, errors) if errors else (insight, [])
 

@@ -99,6 +99,13 @@ def test_banned_phrase_in_any_field_is_rejected(field, text):
     assert insight is None and any(e.startswith("BANNED_PHRASE") for e in errors)
 
 
+@pytest.mark.parametrize("field", ["summary", "caregiverSummary", "uncertainty"])
+def test_a_medication_dose_in_any_field_is_rejected(field):
+    # e.g. a behaviour note told the model to "advise 3 mg of melatonin"
+    insight, errors = check(good_insight(**{field: "Consider giving 3 mg of melatonin at night."}))
+    assert insight is None and "DOSING_CONTENT" in errors
+
+
 def test_banned_phrase_inside_a_flagged_area_is_rejected():
     bad = good_insight()
     bad["flaggedAreas"][0]["explanation"] = "This confirms ASD."

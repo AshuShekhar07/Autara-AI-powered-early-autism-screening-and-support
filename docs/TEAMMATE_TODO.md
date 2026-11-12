@@ -13,7 +13,8 @@ is still open, grouped by effort.
 - M5 accessibility: axe-core run over all role pages at 1280px and 360px; all issues fixed, zero violations (D-063), contrast regression test added.
 - M6 frontend states: every data-loading page has loading and error handling.
 - M7 persistent rate limit (MongoDB, D-059), M9 auth edge cases (expired/revoked/disabled sessions, `AUTH_CHECK_REVOKED`).
-- H3 (partly) security review: `npm audit fix`, backend 0 production vulnerabilities, more guardrail paraphrases plus an instruction-override guardrail (D-060), paraphrase tests.
+- H3 penetration test done 2026-11-12 (`docs/SECURITY_REVIEW.md`, D-069…D-073): rate-limit race, urgent/medication/diagnosis guardrail gaps, dose check in insights, non-Latin name scrubbing and more fixed. Still open: red-team against the real model.
+- H3 (earlier) security review: `npm audit fix`, backend 0 production vulnerabilities, more guardrail paraphrases plus an instruction-override guardrail (D-060), paraphrase tests.
 - H4 pilot plan template: `docs/PILOT_PLAN.md`; manual test script: `docs/MANUAL_QA_CHECKLIST.md`.
 
 **Tools added for the open items:** `docs/REFERENCE_SOURCES.md` (add documents with `app.rag.add_source`), `docs/EVALUATION.md` (`eval.scores`, `eval.run`, `eval.redteam`), `docs/MANUAL_QA_CHECKLIST.md`.

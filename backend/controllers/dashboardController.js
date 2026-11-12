@@ -83,7 +83,7 @@ const timeline = asyncHandler(async (req, res) => {
       events.push({
         id: `rev-${s._id}`, type: 'review', at: s.clinicianReview.reviewedAt, ref: { kind: 'screening', id: String(s._id) },
         title: 'Reviewed by a clinician',
-        summary: s.clinicianReview.override ? `Tier changed from ${s.clinicianReview.override.originalTier} to ${s.clinicianReview.override.riskTier}` : 'Questionnaire-based tier confirmed',
+        summary: s.clinicianReview.override && s.clinicianReview.override.riskTier !== s.clinicianReview.override.originalTier ? `Tier changed from ${s.clinicianReview.override.originalTier} to ${s.clinicianReview.override.riskTier}` : 'Questionnaire-based tier confirmed',
       })
     }
     if (clinical) {

@@ -34,12 +34,12 @@ FAILED_MESSAGE = (
 
 def pre_check(question: str) -> tuple[str, str] | None:
     """Returns (guardrail_name, message) when the question must not reach the LLM. Order matters: safety first."""
-    if safety.URGENT.search(question):
+    if safety.hit(safety.URGENT, question):
         return "urgent_safety", URGENT_MESSAGE
-    if safety.MEDICATION.search(question):
+    if safety.hit(safety.MEDICATION, question):
         return "medication", MEDICATION_MESSAGE
-    if safety.DIAGNOSIS.search(question):
+    if safety.hit(safety.DIAGNOSIS, question):
         return "diagnosis", DIAGNOSIS_MESSAGE
-    if safety.INSTRUCTION_OVERRIDE.search(question):
+    if safety.hit(safety.INSTRUCTION_OVERRIDE, question):
         return "instruction_override", OVERRIDE_MESSAGE
     return None

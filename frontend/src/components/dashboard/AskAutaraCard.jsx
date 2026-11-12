@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import { useChildren } from '../../context/ChildContext'
 import { api } from '../../lib/api'
 import { DISCLAIMER } from '../../lib/screeningCopy'
+import { safeHttpUrl } from '../../lib/safeUrl'
 import './AskAutaraCard.css'
 
 const GUARDRAIL_LABEL = {
@@ -73,7 +74,7 @@ export default function AskAutaraCard({ full = false }) {
                     <ul className="ask-sources" aria-label="Sources">
                       {t.a.sources.map((s, j) => (
                         <li key={j}>
-                          {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a> : s.title}
+                          {safeHttpUrl(s.url) ? <a href={safeHttpUrl(s.url)} target="_blank" rel="noopener noreferrer">{s.title}</a> : s.title}
                           <span className="sc-muted"> — {s.publisher}, {s.version}{s.page ? `, p. ${s.page}` : ''}{s.section ? `, ${s.section}` : ''}</span>
                         </li>
                       ))}

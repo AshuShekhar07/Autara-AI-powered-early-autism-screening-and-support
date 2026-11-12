@@ -5,11 +5,15 @@ const { getInstrument } = require('./instrument')
 const MAX_LOGS = 20
 const MAX_NOTE = 160
 
-/** Replaces the child's name (whole words) with "[child]" so it never reaches the LLM. */
+/**
+ * Replaces the child's name (whole words) with "[child]" so it never reaches the LLM.
+ * Word edges are Unicode-aware: JavaScript's \b only knows A–Z, so "Ānya", "José" or "आरव" were never matched.
+ */
 function scrub(text, names) {
   let out = String(text || '')
   for (const n of names.filter((x) => x && x.length >= 2)) {
-    out = out.replace(new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi'), '[child]')
+    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    out = out.replace(new RegExp(`(?<![\\p{L}\\p{M}\\p{N}_])${escaped}(?![\\p{L}\\p{M}\\p{N}_])`, 'giu'), '[child]')
   }
   return out.slice(0, MAX_NOTE)
 }

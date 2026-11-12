@@ -62,15 +62,17 @@ const override = asyncHandler(async (req, res) => {
   }
   const { screening } = await loadScreening(req, req.params.id)
   ensureUnderReview(screening, req.dbUser.uid)
-  if (body.riskTier === screening.riskTier) {
-    throw new AppError(400, 'NO_CHANGE', 'That is already the questionnaire-based tier. Add an annotation instead.')
+  // Compared with the tier currently in effect, so a mistaken override can still be set back to the questionnaire tier.
+  const current = screening.clinicianReview.override?.riskTier || screening.riskTier
+  if (body.riskTier === current) {
+    throw new AppError(400, 'NO_CHANGE', 'That is already the current tier. Add an annotation instead.')
   }
   screening.clinicianReview.override = {
     riskTier: body.riskTier, originalTier: screening.riskTier, reason, by: req.dbUser.uid, at: new Date(),
   }
   await screening.save()
   await audit(req, 'SCREENING_OVERRIDDEN', { type: 'screening', id: screening._id },
-    { from: screening.riskTier, to: body.riskTier })
+    { from: current, to: body.riskTier })
   return respond(req, res, screening)
 })
 

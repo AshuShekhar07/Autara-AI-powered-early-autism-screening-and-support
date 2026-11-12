@@ -10,6 +10,7 @@ const FAILURE_TEXT = {
   LLM_ERROR: 'The AI model could not be reached.',
   INVALID_JSON: 'The AI reply was not valid.',
   EMPTY_UNCERTAINTY: 'The AI reply left out its uncertainty statement.',
+  DOSING_CONTENT: 'The AI reply contained a medication dose, so it was blocked.',
 }
 function failureText(code) {
   if (FAILURE_TEXT[code]) return FAILURE_TEXT[code]
