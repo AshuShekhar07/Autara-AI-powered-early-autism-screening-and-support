@@ -1,0 +1,77 @@
+"""Mistral implementation of the writing half of LLMProvider (plain HTTPS through httpx, no extra SDK).
+
+Used ONLY as a backup writer for Ask Autara: the passages are found with the local index, then Mistral writes the
+JSON answer under the same prompt and the same validator as Gemini. It cannot embed (the local model does that).
+Docs: https://docs.mistral.ai/api/endpoint/chat   (JSON mode: response_format {"type": "json_object"})
+"""
+from __future__ import annotations
+
+import time
+
+import httpx
+
+from app import config
+from app.llm.base import EmbedKind, LLMError
+
+_RETRY_STATUS = {429, 500, 502, 503, 504}
+_RETRY_DELAYS = (2,)   # one short retry only; the backend stops waiting after 30 s
+
+
+def _short_error(resp: httpx.Response) -> str:
+    """HTTP status plus Mistral's own message (never the key: the key is only ever sent in the request header)."""
+    detail = ""
+    try:
+        body = resp.json()
+        msg = body.get("message") or (body.get("error") or {}).get("message") if isinstance(body, dict) else ""
+        detail = f": {str(msg)[:200]}" if msg else ""
+    except Exception:  # noqa: BLE001
+        pass
+    return f"HTTP {resp.status_code}{detail}"
+
+
+class MistralProvider:
+    name = "mistral"
+
+    def __init__(self, api_key: str, model: str, base_url: str, timeout_s: float, client: httpx.Client | None = None):
+        self.model = model
+        self._url = f"{base_url}/chat/completions"
+        self._headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json", "Accept": "application/json"}
+        self._timeout = timeout_s
+        self._client = client or httpx.Client(timeout=timeout_s)
+
+    def generate_json(self, system: str, user: str) -> str:
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.2,   # low: we want faithful, not creative
+        }
+        last = "no response"
+        for delay in (*_RETRY_DELAYS, None):
+            try:
+                resp = self._client.post(self._url, headers=self._headers, json=payload, timeout=self._timeout)
+            except httpx.HTTPError as exc:
+                last = type(exc).__name__
+            else:
+                if resp.status_code == 200:
+                    try:
+                        return resp.json()["choices"][0]["message"]["content"] or ""
+                    except (KeyError, IndexError, TypeError, ValueError) as exc:
+                        raise LLMError("LLM_ERROR", f"Mistral returned an unexpected reply ({type(exc).__name__}).") from exc
+                last = _short_error(resp)
+                if resp.status_code not in _RETRY_STATUS:
+                    break
+            if delay is None:
+                break
+            time.sleep(delay)
+        raise LLMError("LLM_ERROR", f"Mistral generation failed: {last}")
+
+    def embed(self, texts: list[str], kind: EmbedKind) -> list[list[float]]:
+        raise LLMError("EMBEDDING_ERROR", "The Mistral provider only writes answers; the local model finds the passages.")
+
+
+def build() -> MistralProvider:
+    key = config.mistral_api_key()
+    if not key:
+        raise LLMError("LLM_NOT_CONFIGURED", "MISTRAL_API_KEY is not set.")
+    return MistralProvider(key, config.mistral_model(), config.mistral_base_url(), config.mistral_timeout_s())

@@ -95,12 +95,15 @@ def _validate(raw: str, n_chunks: int) -> tuple[dict | None, str]:
 SOURCES_ONLY_PROMPT = "sources_only_v1"
 
 
-def _sources_only(req: AskRequest, backup_retrieve=None) -> AskResponse | None:
-    """Backup answer: quotes from the approved documents, found with the LOCAL embedder (no key, no quota).
+def _backup(req: AskRequest, backup_retrieve=None, use_mistral: bool = False, mistral_provider=None) -> AskResponse | None:
+    """Backup answer. Passages are always found with the LOCAL index (no key, no quota). Then, if allowed and
+    configured, Mistral writes the answer from them (same prompt and validator as Gemini); if Mistral is missing,
+    down or its answer fails validation, the passages are shown as word-for-word quotes instead.
 
     Returns None when the backup index has not been built or the local model cannot run, so the caller can
     fall back to the plain "unavailable" message.
     """
+    from app.llm import factory
     from app.rag import store
 
     if store.corpus_size(backup=True) == 0:
@@ -109,6 +112,22 @@ def _sources_only(req: AskRequest, backup_retrieve=None) -> AskResponse | None:
         chunks = (backup_retrieve or (lambda q: retriever.retrieve(q, backup=True)))(req.question)
     except LLMError:
         return None
+    if not chunks:
+        return AskResponse(answer=guardrails.DONT_KNOW_MESSAGE, sources=[], guardrail="no_answer",
+                           model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False)
+
+    if use_mistral and (mistral_provider or config.mistral_api_key()):
+        try:
+            provider = mistral_provider or factory.get_mistral_provider()
+        except LLMError:
+            provider = None
+        if provider:
+            # a second company sees only the question and public passages: the child's screening context is NOT sent
+            written = _generate_answer(AskRequest(question=req.question), chunks, provider)
+            if written.guardrail not in ("unavailable", "validation_failed"):
+                written.contextUsed = False
+                return written
+
     used = excerpts.pick(chunks, req.question, config.backup_max_passages())
     if not used:
         return AskResponse(answer=guardrails.DONT_KNOW_MESSAGE, sources=[], guardrail="no_answer",
@@ -118,20 +137,24 @@ def _sources_only(req: AskRequest, backup_retrieve=None) -> AskResponse | None:
                        model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False)
 
 
-def ask(req: AskRequest, provider=None, retrieve=None, backup_retrieve=None) -> AskResponse:
-    """ASK_MODE=auto (default): Gemini first, quote the sources if Gemini is unavailable. local: never call Gemini. gemini: no backup."""
+def ask(req: AskRequest, provider=None, retrieve=None, backup_retrieve=None, mistral_provider=None) -> AskResponse:
+    """ASK_MODE=auto (default): Gemini, then Mistral if a key is set, then quoted passages. mistral: skip Gemini.
+    local: quoted passages only, fully offline. gemini: Gemini only, no backup."""
     blocked = guardrails.pre_check(req.question)
     if blocked:
         return AskResponse(answer=blocked[1], sources=[], guardrail=blocked[0])
 
+    unavailable = AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="unavailable")
     mode = config.ask_mode()
     if mode == "local":
-        return _sources_only(req, backup_retrieve) or AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="unavailable")
+        return _backup(req, backup_retrieve) or unavailable
+    if mode == "mistral":
+        return _backup(req, backup_retrieve, use_mistral=True, mistral_provider=mistral_provider) or unavailable
 
     response = _ask_with_model(req, provider, retrieve)
     # "no_sources" counts too: the main index may be empty only because embedding it needed the key that just failed
     if mode == "auto" and response.guardrail in ("unavailable", "no_sources"):
-        return _sources_only(req, backup_retrieve) or response
+        return _backup(req, backup_retrieve, use_mistral=True, mistral_provider=mistral_provider) or response
     return response
 
 
@@ -155,6 +178,11 @@ def _ask_with_model(req: AskRequest, provider=None, retrieve=None) -> AskRespons
     except LLMError:
         return AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="unavailable")
 
+    return _generate_answer(req, chunks, provider)
+
+
+def _generate_answer(req: AskRequest, chunks: list[Chunk], provider) -> AskResponse:
+    """Asks the model to answer ONLY from the passages, validates the JSON (one repair retry), builds the response."""
     system = load_prompt(PROMPT_NAME)
     user = _user_prompt(req, chunks)
     reason = ""

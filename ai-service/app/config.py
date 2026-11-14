@@ -74,9 +74,10 @@ def rag_min_similarity() -> float:
 
 # ── Ask Autara backup ("sources-only" mode: local embeddings, no LLM, no key, no quota) ──
 def ask_mode() -> str:
-    """auto = Gemini first, quote the approved sources if Gemini fails | local = never call Gemini | gemini = no fallback."""
+    """auto = Gemini, then Mistral (if a key is set), then quoted passages | mistral = skip Gemini |
+    local = quoted passages only, fully offline | gemini = Gemini only, no backup."""
     mode = os.environ.get("ASK_MODE", "auto").strip().lower()
-    return mode if mode in ("auto", "local", "gemini") else "auto"
+    return mode if mode in ("auto", "mistral", "local", "gemini") else "auto"
 
 
 def rag_backup_min_similarity() -> float:
@@ -87,3 +88,21 @@ def rag_backup_min_similarity() -> float:
 
 def backup_max_passages() -> int:
     return int(os.environ.get("ASK_BACKUP_MAX_PASSAGES", "3"))
+
+
+# ── Mistral (backup writer: writes the answer from passages found by the LOCAL index; never embeds) ──
+def mistral_api_key() -> str:
+    return os.environ.get("MISTRAL_API_KEY", "")
+
+
+def mistral_model() -> str:
+    return os.environ.get("MISTRAL_MODEL", "mistral-small-latest")
+
+
+def mistral_base_url() -> str:
+    return os.environ.get("MISTRAL_BASE_URL", "https://api.mistral.ai/v1").rstrip("/")
+
+
+def mistral_timeout_s() -> float:
+    # short on purpose: the Node backend gives up on Ask after 30 s, and Gemini may already have used some of that
+    return float(os.environ.get("MISTRAL_TIMEOUT_MS", "12000")) / 1000

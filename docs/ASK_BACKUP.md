@@ -1,4 +1,4 @@
-# Ask Autara backup ("sources-only" mode) — how to build and test it
+# Ask Autara backup — how to build and test it
 
 What it is: when Gemini is unavailable, Ask Autara shows the best-matching passages from the approved documents,
 word for word, with their source. No AI writes anything, no API key is needed, nothing leaves the laptop.
@@ -41,3 +41,26 @@ a question asking whether your child has a condition, e.g. "is my son on the spe
 - Re-run `python -m app.rag.ingest --backup` whenever you add or change a document (and the normal ingest for Gemini).
 - The backup ignores the child's screening context, so those answers are general, not personal.
 - If the first backup run cannot download the model (no internet), Ask Autara simply shows the usual "not available" message.
+
+## Step 2: Mistral writes the answer (optional)
+Order in `ASK_MODE=auto`: **Gemini → Mistral → quoted passages**. Mistral only *writes*; the passages are found with the
+offline index you built above, so nothing else needs to be built.
+
+1. Get a free key at https://console.mistral.ai (API keys). Read their data-use terms for your plan.
+2. In `ai-service\.env` add (do not paste it anywhere):
+   ```
+   MISTRAL_API_KEY=your-key
+   MISTRAL_MODEL=mistral-small-latest
+   ```
+3. Check it works:
+   ```powershell
+   cd C:\Users\ashus\Autara-AI-powered-early-autism-screening-and-support\ai-service
+   .\.venv\Scripts\Activate.ps1
+   python -m app.llm.check --mistral
+   ```
+   Expected: `PASS  text generation (mistral-small-latest)`.
+4. Test the chain in the app: keep the Gemini key broken, set `ASK_MODE=mistral` (skips Gemini) or leave `auto`, restart the AI service,
+   and ask "What causes developmental delays in toddlers?". You should now get a **written** answer with sources (no "Quoted from approved sources" label).
+5. Break the Mistral key too (add a letter) and ask again: you should be back to quoted passages. Nothing is ever left blank.
+
+Privacy: Mistral gets the question and public reference passages only. The child's screening context is never sent to it.
