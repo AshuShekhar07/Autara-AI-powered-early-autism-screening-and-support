@@ -191,3 +191,15 @@ def test_the_writer_gets_only_the_best_few_passages(kdir, fake_local, monkeypatc
               backup_retrieve=lambda q: many, llm_provider=w)
     sent = w.prompts[0][1]
     assert res.model == "llama-test" and "[R2]" in sent and "[R3]" not in sent
+
+
+def test_the_reason_the_writer_fell_back_is_reported(kdir, fake_local, monkeypatch):
+    build_backup(kdir, fake_local)
+    monkeypatch.setenv("RAG_BACKUP_MIN_SIMILARITY", "0.2"); monkeypatch.setenv("BACKUP_LLM_API_KEY", "k"); monkeypatch.setenv("ASK_MODE", "backup")
+    limited = LLMError("LLM_ERROR", "Backup AI generation failed: HTTP 429: Rate limit reached")
+    res = ask(AskRequest(question="When do toddlers point to share interest?"), llm_provider=writer_fake(limited))
+    assert res.guardrail == "sources_only" and res.fallbackReason == "LLM_ERROR: Backup AI generation failed: HTTP 429: Rate limit reached"
+    bad = ask(AskRequest(question="When do toddlers point to share interest?"), llm_provider=writer_fake("not json", "still not json"))
+    assert bad.guardrail == "sources_only" and bad.fallbackReason == "validation: INVALID_JSON"
+    fine = ask(AskRequest(question="When do toddlers point to share interest?"), llm_provider=writer_fake(GOOD))
+    assert fine.fallbackReason is None

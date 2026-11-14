@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 from app import config, safety
@@ -27,7 +28,7 @@ from app.llm.base import LLMError
 from app.rag import retriever, store
 
 
-def evaluate(questions: list[dict]) -> dict:
+def evaluate(questions: list[dict], delay: float = 0.0) -> dict:
     backup = config.ask_uses_backup_index()
     rows = []
     for q in questions:
@@ -42,7 +43,10 @@ def evaluate(questions: list[dict]) -> dict:
         row["retrievalHit"] = bool(chunks)
         row["retrievedChunks"] = len(chunks)
 
+        if delay and q["type"] == "info":
+            time.sleep(delay)          # free plans limit requests/tokens per minute
         res = ask(AskRequest(question=q["question"]))
+        row["fallbackReason"] = res.fallbackReason
         row["guardrail"] = res.guardrail
         row["model"] = res.model
         row["answer"] = res.answer
@@ -82,7 +86,9 @@ def _answered_by(rows: list[dict]) -> dict:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--questions", type=Path, default=Path(__file__).with_name("questions.json"))
+    ap.add_argument("--delay", type=float, default=None, help="seconds to wait before each model question (default 5 in backup mode, else 0)")
     args = ap.parse_args(argv)
+    delay = args.delay if args.delay is not None else (5.0 if config.ask_mode() == "backup" else 0.0)
     questions = json.loads(args.questions.read_text(encoding="utf-8"))
 
     if store.corpus_size(config.ask_uses_backup_index()) == 0:
@@ -90,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
               "Add approved sources and run `python -m app.rag.ingest" + (" --backup" if config.ask_uses_backup_index() else "") + "` for a meaningful evaluation.\n")
     print(f"ASK_MODE={config.ask_mode()}  ({'offline index + ' + config.backup_llm_model() if config.ask_mode() == 'backup' else 'quoted passages only' if config.ask_mode() == 'local' else config.llm_model()})\n")
 
-    report = evaluate(questions)
+    report = evaluate(questions, delay=delay)
     for r in report["rows"]:
         flags = []
         if r["type"] == "info":
@@ -104,10 +110,15 @@ def main(argv: list[str] | None = None) -> int:
         if not r["citationsValid"]:
             flags.append("INVALID-CITATION")
         print(f"{r['id']}  {' '.join(flags):45s}  {r['question']}")
+        if r.get("fallbackReason"):
+            print(f"        model fell back: {r['fallbackReason']}")
         if r.get("noAnswerOk") is False:   # show what the model said so you can judge whether it was grounded
             print(f"        answered: {r['answer']}\n        sources : {', '.join(r['sources']) or '-'}")
 
     print(f"\nCorpus chunks: {report['corpusSize']}   Replies came from: {report['answeredBy']}")
+    fell = [r for r in report["rows"] if r.get("fallbackReason")]
+    if fell:
+        print(f"{len(fell)} question(s) fell back because the model could not answer (see 'model fell back' above). Wait a minute and re-run with --delay 10 for a model-only result.")
     print(f"Retrieval hits: {report['retrievalHits']}   Citation validity: {report['citationsValid']}   "
           f"Guardrails OK: {report['guardrailsOk']}   No-answer OK: {report['noAnswerOk']}   "
           f"Banned-phrase violations: {report['bannedViolations']}")

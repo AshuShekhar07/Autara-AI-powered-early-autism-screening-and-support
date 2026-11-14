@@ -54,6 +54,7 @@ class AskResponse(BaseModel):
     promptVersion: str = PROMPT_NAME
     model: str = ""
     contextUsed: bool | None = None   # False when the answer ignored the child's screening context (sources-only mode)
+    fallbackReason: str | None = None  # why a model could not answer (rate limit, invalid reply…); shown by the eval tools, no secrets
 
 
 def _source(c: Chunk) -> SourceOut:
@@ -116,6 +117,7 @@ def _backup(req: AskRequest, backup_retrieve=None, use_llm: bool = False, llm_pr
         return AskResponse(answer=guardrails.DONT_KNOW_MESSAGE, sources=[], guardrail="no_answer",
                            model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False)
 
+    fallback_reason = None
     if use_llm and (llm_provider or config.backup_llm_api_key()):
         try:
             provider = llm_provider or factory.get_backup_llm_provider()
@@ -128,6 +130,7 @@ def _backup(req: AskRequest, backup_retrieve=None, use_llm: bool = False, llm_pr
             if written.guardrail not in ("unavailable", "validation_failed"):
                 written.contextUsed = False
                 return written
+            fallback_reason = written.fallbackReason
 
     used = excerpts.pick(chunks, req.question, config.backup_max_passages())
     if not used:
@@ -135,7 +138,7 @@ def _backup(req: AskRequest, backup_retrieve=None, use_llm: bool = False, llm_pr
                            model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False)
     unique = list({(c.source, c.page, c.section): c for c, _ in used}.values())
     return AskResponse(answer=excerpts.compose(used), sources=[_source(c) for c in unique], guardrail="sources_only",
-                       model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False)
+                       model="local-sources-only", promptVersion=SOURCES_ONLY_PROMPT, contextUsed=False, fallbackReason=fallback_reason)
 
 
 def ask(req: AskRequest, provider=None, retrieve=None, backup_retrieve=None, llm_provider=None) -> AskResponse:
@@ -191,8 +194,8 @@ def _generate_answer(req: AskRequest, chunks: list[Chunk], provider) -> AskRespo
         prompt = user if attempt == 0 else user + f"\n\nYour previous answer was rejected ({reason}). Return corrected JSON."
         try:
             raw = provider.generate_json(system, prompt)
-        except LLMError:
-            return AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="unavailable")
+        except LLMError as exc:
+            return AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="unavailable", fallbackReason=f"{exc.code}: {str(exc)[:160]}")
         parsed, reason = _validate(raw, len(chunks))
         if parsed:
             if not parsed["canAnswer"]:
@@ -200,4 +203,4 @@ def _generate_answer(req: AskRequest, chunks: list[Chunk], provider) -> AskRespo
             cited = [chunks[int(c[1:]) - 1] for c in parsed["citations"]]
             unique = list({(c.source, c.page, c.section): c for c in cited}.values())
             return AskResponse(answer=parsed["answer"], sources=[_source(c) for c in unique], model=provider.model)
-    return AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="validation_failed", model=provider.model)
+    return AskResponse(answer=guardrails.FAILED_MESSAGE, sources=[], guardrail="validation_failed", model=provider.model, fallbackReason=f"validation: {reason}")
