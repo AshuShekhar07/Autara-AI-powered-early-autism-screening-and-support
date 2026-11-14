@@ -89,6 +89,8 @@ def rag_backup_min_similarity() -> float:
 
 
 def backup_max_passages() -> int:
+    """How many passages the backup shows as quotes AND hands to the backup writer (fewer = fewer tokens, which keeps
+    a free plan's per-minute token limit from being hit)."""
     return int(os.environ.get("ASK_BACKUP_MAX_PASSAGES", "3"))
 
 

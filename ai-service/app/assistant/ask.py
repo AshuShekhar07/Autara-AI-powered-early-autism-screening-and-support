@@ -123,7 +123,8 @@ def _backup(req: AskRequest, backup_retrieve=None, use_llm: bool = False, llm_pr
             provider = None
         if provider:
             # another company sees only the question and public passages: the child's screening context is NOT sent
-            written = _generate_answer(AskRequest(question=req.question), chunks, provider)
+            # only the best few passages: a free plan limits tokens per minute, and weaker matches add noise
+            written = _generate_answer(AskRequest(question=req.question), chunks[:config.backup_max_passages()], provider)
             if written.guardrail not in ("unavailable", "validation_failed"):
                 written.contextUsed = False
                 return written

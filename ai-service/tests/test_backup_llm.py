@@ -180,3 +180,14 @@ def test_a_service_that_rejects_json_mode_is_retried_without_it():
         return ok_reply('{"ok": true}')
     assert provider_with(handler).generate_json("s", "u") == '{"ok": true}'
     assert "response_format" in bodies[0] and "response_format" not in bodies[1]
+
+
+def test_the_writer_gets_only_the_best_few_passages(kdir, fake_local, monkeypatch):
+    build_backup(kdir, fake_local)
+    monkeypatch.setenv("RAG_BACKUP_MIN_SIMILARITY", "0.1"); monkeypatch.setenv("BACKUP_LLM_API_KEY", "k"); monkeypatch.setenv("ASK_BACKUP_MAX_PASSAGES", "2")
+    many = [chunk(id=f"c{i}", text=f"Pointing passage number {i} about sharing interest.", score=0.9 - i * 0.01) for i in range(5)]
+    w = writer_fake(GOOD)
+    res = ask(AskRequest(question="When do toddlers point to share interest?"), provider=FakeProvider([down()]), retrieve=lambda q: many,
+              backup_retrieve=lambda q: many, llm_provider=w)
+    sent = w.prompts[0][1]
+    assert res.model == "llama-test" and "[R2]" in sent and "[R3]" not in sent
