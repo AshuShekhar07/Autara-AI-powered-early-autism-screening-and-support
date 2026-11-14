@@ -74,10 +74,12 @@ def rag_min_similarity() -> float:
 
 # ── Ask Autara backup ("sources-only" mode: local embeddings, no LLM, no key, no quota) ──
 def ask_mode() -> str:
-    """auto = Gemini, then Mistral (if a key is set), then quoted passages | mistral = skip Gemini |
+    """auto = Gemini, then the backup writer (if a key is set), then quoted passages | backup = skip Gemini completely
+    (passages found offline, written by the backup writer, quoted passages if that fails) |
     local = quoted passages only, fully offline | gemini = Gemini only, no backup."""
     mode = os.environ.get("ASK_MODE", "auto").strip().lower()
-    return mode if mode in ("auto", "mistral", "local", "gemini") else "auto"
+    mode = "backup" if mode == "mistral" else mode      # old name
+    return mode if mode in ("auto", "backup", "local", "gemini") else "auto"
 
 
 def rag_backup_min_similarity() -> float:
@@ -90,19 +92,26 @@ def backup_max_passages() -> int:
     return int(os.environ.get("ASK_BACKUP_MAX_PASSAGES", "3"))
 
 
-# ── Mistral (backup writer: writes the answer from passages found by the LOCAL index; never embeds) ──
-def mistral_api_key() -> str:
-    return os.environ.get("MISTRAL_API_KEY", "")
+# ── Backup writer: ANY service that speaks the common "chat completions" API (Groq, OpenRouter, Mistral, Ollama…).
+# It only WRITES answers from passages found with the local offline index; it never embeds and never sees the child's context.
+def _legacy_mistral() -> bool:
+    return not os.environ.get("BACKUP_LLM_API_KEY") and bool(os.environ.get("MISTRAL_API_KEY"))
 
 
-def mistral_model() -> str:
-    return os.environ.get("MISTRAL_MODEL", "mistral-small-latest")
+def backup_llm_api_key() -> str:
+    return os.environ.get("BACKUP_LLM_API_KEY") or os.environ.get("MISTRAL_API_KEY", "")
 
 
-def mistral_base_url() -> str:
-    return os.environ.get("MISTRAL_BASE_URL", "https://api.mistral.ai/v1").rstrip("/")
+def backup_llm_base_url() -> str:
+    default = "https://api.mistral.ai/v1" if _legacy_mistral() else "https://api.groq.com/openai/v1"
+    return (os.environ.get("BACKUP_LLM_BASE_URL") or os.environ.get("MISTRAL_BASE_URL") or default).rstrip("/")
 
 
-def mistral_timeout_s() -> float:
+def backup_llm_model() -> str:
+    default = (os.environ.get("MISTRAL_MODEL") or "mistral-small-latest") if _legacy_mistral() else "llama-3.3-70b-versatile"
+    return os.environ.get("BACKUP_LLM_MODEL") or default
+
+
+def backup_llm_timeout_s() -> float:
     # short on purpose: the Node backend gives up on Ask after 30 s, and Gemini may already have used some of that
-    return float(os.environ.get("MISTRAL_TIMEOUT_MS", "12000")) / 1000
+    return float(os.environ.get("BACKUP_LLM_TIMEOUT_MS") or os.environ.get("MISTRAL_TIMEOUT_MS") or "12000") / 1000

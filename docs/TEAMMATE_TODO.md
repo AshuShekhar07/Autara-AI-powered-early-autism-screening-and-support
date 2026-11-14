@@ -13,7 +13,7 @@ is still open, grouped by effort.
 - M5 accessibility: axe-core run over all role pages at 1280px and 360px; all issues fixed, zero violations (D-063), contrast regression test added.
 - M6 frontend states: every data-loading page has loading and error handling.
 - M7 persistent rate limit (MongoDB, D-059), M9 auth edge cases (expired/revoked/disabled sessions, `AUTH_CHECK_REVOKED`).
-- Ask Autara backup (D-074, `docs/ASK_BACKUP.md`) built: offline sources-only mode. To test on a laptop with the real CDC documents. Mistral backup writer added too (D-075): needs a key and a live test (`python -m app.llm.check --mistral`).
+- Ask Autara backup (D-074, `docs/ASK_BACKUP.md`) built: offline sources-only mode. To test on a laptop with the real CDC documents. Backup writer (Groq / Ollama / any chat-completions service, D-075/D-076): needs a free key and a live test (`python -m app.llm.check --backup`); `ASK_MODE=backup` uses no Gemini quota for Ask.
 - H3 penetration test done 2026-11-12 (`docs/SECURITY_REVIEW.md`, D-069…D-073): rate-limit race, urgent/medication/diagnosis guardrail gaps, dose check in insights, non-Latin name scrubbing and more fixed. Still open: red-team against the real model.
 - H3 (earlier) security review: `npm audit fix`, backend 0 production vulnerabilities, more guardrail paraphrases plus an instruction-override guardrail (D-060), paraphrase tests.
 - H4 pilot plan template: `docs/PILOT_PLAN.md`; manual test script: `docs/MANUAL_QA_CHECKLIST.md`.

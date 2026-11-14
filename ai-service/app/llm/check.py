@@ -1,5 +1,5 @@
 """Quick self-test for the Gemini setup:   python -m app.llm.check
-For the Mistral backup writer:          python -m app.llm.check --mistral
+For the backup writer (Groq etc.):      python -m app.llm.check --backup
 
 Makes ONE tiny generation call and ONE tiny embedding call with the models from your .env and says
 which worked. Nothing is stored. Your key is never printed.
@@ -17,28 +17,29 @@ def _redact(text: str) -> str:
     return text.replace(key, "***") if key else text
 
 
-def check_mistral() -> int:
-    key = config.mistral_api_key()
-    print(f"MISTRAL_MODEL    = {config.mistral_model()}")
+def check_backup() -> int:
+    key = config.backup_llm_api_key()
+    print(f"BACKUP_LLM_BASE_URL = {config.backup_llm_base_url()}")
+    print(f"BACKUP_LLM_MODEL    = {config.backup_llm_model()}")
     if not key:
-        print("\nFAIL: MISTRAL_API_KEY is empty. Put your key in ai-service/.env and run this again.")
+        print("\nFAIL: BACKUP_LLM_API_KEY is empty. Put your key in ai-service/.env and run this again.")
         return 1
-    print(f"MISTRAL_API_KEY  = set ({len(key)} characters)\n")
-    from app.llm import mistral
+    print(f"BACKUP_LLM_API_KEY  = set ({len(key)} characters)\n")
+    from app.llm import openai_compat
     try:
-        raw = mistral.build().generate_json("You reply with JSON only.", 'Reply with exactly this JSON and nothing else: {"ok": true}')
-        print(f"PASS  text generation ({config.mistral_model()}) → {json.loads(raw)}")
+        raw = openai_compat.build().generate_json("You reply with JSON only.", 'Reply with exactly this JSON and nothing else: {"ok": true}')
+        print(f"PASS  text generation ({config.backup_llm_model()}) → {json.loads(raw)}")
     except Exception as exc:  # noqa: BLE001
         print(f"FAIL  text generation: {str(exc).replace(key, '***')[:300]}")
-        print("\nCommon causes: wrong key, a model name your plan can't use (change MISTRAL_MODEL), the rate limit, or no internet.")
+        print("\nCommon causes: wrong key, a model name your account can't use (change BACKUP_LLM_MODEL), the rate limit, or no internet.")
         return 1
-    print("\nAll good — Ask Autara can use Mistral as its backup writer.")
+    print("\nAll good — Ask Autara can use this as its backup writer.")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    if "--mistral" in (argv if argv is not None else sys.argv[1:]):
-        return check_mistral()
+    if {"--backup", "--mistral"} & set(argv if argv is not None else sys.argv[1:]):
+        return check_backup()
     key = config.gemini_api_key()
     print(f"LLM_MODEL        = {config.llm_model()}")
     print(f"EMBEDDING_MODEL  = {config.embedding_model()}")

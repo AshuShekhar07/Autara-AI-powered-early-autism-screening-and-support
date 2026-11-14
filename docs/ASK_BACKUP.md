@@ -42,25 +42,43 @@ a question asking whether your child has a condition, e.g. "is my son on the spe
 - The backup ignores the child's screening context, so those answers are general, not personal.
 - If the first backup run cannot download the model (no internet), Ask Autara simply shows the usual "not available" message.
 
-## Step 2: Mistral writes the answer (optional)
-Order in `ASK_MODE=auto`: **Gemini → Mistral → quoted passages**. Mistral only *writes*; the passages are found with the
-offline index you built above, so nothing else needs to be built.
+## Step 2: a backup writer for real answers (optional) — and zero Gemini quota for Ask
+Any service with the common "chat completions" API works: **Groq** (free key), **Ollama** (on your laptop, no key), OpenRouter, Mistral.
+The passages are still found with the offline index you built above, so nothing else needs to be built, and
+**the child's screening context is never sent to the writer**.
 
-1. Get a free key at https://console.mistral.ai (API keys). Read their data-use terms for your plan.
-2. In `ai-service\.env` add (do not paste it anywhere):
+### Groq (recommended: free key, nothing to install)
+1. Create a key at https://console.groq.com (API Keys). Check the limits page for your account.
+2. Open the file: `notepad C:\Users\ashus\Autara-AI-powered-early-autism-screening-and-support\ai-service\.env`
+3. Add (never paste the key anywhere):
    ```
-   MISTRAL_API_KEY=your-key
-   MISTRAL_MODEL=mistral-small-latest
+   BACKUP_LLM_API_KEY=your-groq-key
+   ASK_MODE=backup
    ```
-3. Check it works:
+   The Groq address and model (`llama-3.3-70b-versatile`) are the defaults. If Groq has retired that model, set `BACKUP_LLM_MODEL=` to a current one from their model list.
+4. Check the key:
    ```powershell
    cd C:\Users\ashus\Autara-AI-powered-early-autism-screening-and-support\ai-service
    .\.venv\Scripts\Activate.ps1
-   python -m app.llm.check --mistral
+   python -m app.llm.check --backup
    ```
-   Expected: `PASS  text generation (mistral-small-latest)`.
-4. Test the chain in the app: keep the Gemini key broken, set `ASK_MODE=mistral` (skips Gemini) or leave `auto`, restart the AI service,
-   and ask "What causes developmental delays in toddlers?". You should now get a **written** answer with sources (no "Quoted from approved sources" label).
-5. Break the Mistral key too (add a letter) and ask again: you should be back to quoted passages. Nothing is ever left blank.
+   Expected: `PASS  text generation (...)`.
+5. Restart the AI service and ask in the app. With `ASK_MODE=backup` Gemini is **never called** for Ask: the finding is offline and Groq writes.
+   (`ASK_MODE=auto` keeps Gemini first and uses Groq only when Gemini fails.)
 
-Privacy: Mistral gets the question and public reference passages only. The child's screening context is never sent to it.
+### Ollama (all on your laptop, no key, no internet)
+Install Ollama, run `ollama pull <model>` (a small instruct model, about 2 GB), then in `.env`:
+```
+BACKUP_LLM_BASE_URL=http://localhost:11434/v1
+BACKUP_LLM_MODEL=<the model you pulled>
+BACKUP_LLM_API_KEY=ollama
+ASK_MODE=backup
+```
+Slower on a CPU and needs roughly 8 GB of RAM.
+
+### What the answer looks like and what happens on failure
+A written answer with sources and no "Quoted from approved sources" label. If the writer is missing, slow, rate-limited or its answer fails
+the checks (citations, banned wording, doses), the quoted passages are shown instead. Nothing is ever left blank.
+
+Privacy: the writer receives the question and public reference passages only. The question is free text, so remind caregivers not to type names.
+(Old `MISTRAL_*` settings and `ASK_MODE=mistral` still work.)

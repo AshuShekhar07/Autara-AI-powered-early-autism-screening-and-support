@@ -17,7 +17,7 @@ def get_local_provider() -> LLMProvider:
     return local.build()
 
 
-def get_mistral_provider() -> LLMProvider:
-    """Backup writer for Ask Autara (needs MISTRAL_API_KEY). It cannot embed."""
-    from app.llm import mistral
-    return mistral.build()
+def get_backup_llm_provider() -> LLMProvider:
+    """Backup writer for Ask Autara (needs BACKUP_LLM_API_KEY). It cannot embed."""
+    from app.llm import openai_compat
+    return openai_compat.build()
