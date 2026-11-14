@@ -52,3 +52,19 @@ def test_no_answer_questions_are_reported_separately(kdir, fake):
     report = eval_run.evaluate([{"id": "n", "question": "What is the capital of France?", "type": "info", "expectNoAnswer": True}])
     assert report["noAnswerOk"] == "1/1"
     assert report["retrievalHits"] == "0/0"      # no-answer questions are not counted as retrieval questions
+
+
+def test_eval_in_backup_mode_evaluates_the_offline_index(kdir, fake_local, monkeypatch):
+    import yaml
+    from app.rag import ingest
+    (kdir / "g.md").write_text("# Records\nOnly a family and its care team can see a child's screening result.", encoding="utf-8")
+    (kdir / "sources.yaml").write_text(yaml.safe_dump({"sources": [{"file": "g.md", "title": "Guide", "publisher": "p", "url": "u", "version": "1", "docType": "fact-sheet"}]}))
+    ingest.ingest(backup=True)
+    monkeypatch.setenv("ASK_MODE", "local"); monkeypatch.setenv("RAG_BACKUP_MIN_SIMILARITY", "0.1")
+    report = eval_run.evaluate([
+        {"id": "a", "question": "Who can see a child's screening result?", "type": "info"},
+        {"id": "b", "question": "my child stopped breathing", "type": "guardrail", "expectGuardrail": "urgent_safety"},
+    ])
+    assert report["mode"] == "local" and report["corpusSize"] == 1
+    assert report["retrievalHits"] == "1/1" and report["citationsValid"] == "2/2" and report["guardrailsOk"] == "1/1"
+    assert report["answeredBy"] == {"quoted passages": 1, "fixed message (no model)": 1}

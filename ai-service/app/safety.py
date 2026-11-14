@@ -110,6 +110,7 @@ DIAGNOSIS = re.compile(
     r"(?:\b(?:does|do|did|is|are|could|can|might|will)\b.{0,40}\b(?:have|has|having|be|been)\b.{0,25}\b(?:autism|asd|autistic)\b)|"
     r"\b(?:diagnos\w+)\b.{0,30}\b(?:my|our|his|her|their)\b|"
     r"\b(?:what|which)\b.{0,20}\b(?:level|severity|stage)\b|"
+    r"\b(?:rate|grade|score|rank|rating|classify)\b.{0,25}\b(?:severity|level|stage)\b|"
     r"\b(?:is|are)\b.{0,15}\b(?:autistic)\b|"
     r"\b(?:on|in)\s+the\s+(?:autism\s+)?spectrum\b|"
     r"\b(?:give|tell|provide|make)\b.{0,12}\b(?:me|us)\b.{0,12}\ba\s+diagnos\w+|"

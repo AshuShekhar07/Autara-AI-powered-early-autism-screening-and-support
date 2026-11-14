@@ -44,3 +44,23 @@ the pattern or prompt, and re-run. (The offline run already caught and fixed one
 
 Honest framing: this measures whether answers stay grounded, cited and safe on a small question set. It does **not** measure clinical
 accuracy or usefulness to families.
+
+## Running the checks in backup mode (Groq writer + offline index)
+`eval.run`, `eval.scores` and `eval.redteam` follow `ASK_MODE` in `ai-service/.env`, so they measure what Ask Autara really does:
+
+| `ASK_MODE` | Index searched | Who writes the answer | Needs |
+|---|---|---|---|
+| `gemini` / `auto` | main (Gemini) index | Gemini | `GEMINI_API_KEY` |
+| `backup` | offline index (`--backup`) | the backup writer (`BACKUP_LLM_*`, e.g. Groq) | `BACKUP_LLM_API_KEY` |
+| `local` | offline index | nobody: quoted passages | nothing |
+
+```powershell
+cd ai-service ; .\.venv\Scripts\Activate.ps1
+python -m app.rag.ingest --backup          # once, and after any document change
+python -m eval.scores --backup             # similarity per question; tune RAG_BACKUP_MIN_SIMILARITY
+python -m eval.run                         # retrieval, citations, guardrails, banned wording, no-answer
+python -m eval.redteam                     # 34 adversarial questions
+```
+`eval.run` prints which source produced each reply (the writer's model name, quoted passages, or a fixed guardrail message).
+Free plans limit requests per minute: if Groq answers 429, the reply falls back to quoted passages (visible in that count), so wait a minute and re-run for a clean model-only result.
+Report the numbers exactly as printed (see "Measured results" above) and write down the date, `ASK_MODE`, model name and corpus size next to them.

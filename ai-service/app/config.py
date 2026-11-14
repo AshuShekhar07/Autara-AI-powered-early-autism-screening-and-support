@@ -117,3 +117,8 @@ def backup_llm_model() -> str:
 def backup_llm_timeout_s() -> float:
     # short on purpose: the Node backend gives up on Ask after 30 s, and Gemini may already have used some of that
     return float(os.environ.get("BACKUP_LLM_TIMEOUT_MS") or os.environ.get("MISTRAL_TIMEOUT_MS") or "12000") / 1000
+
+
+def ask_uses_backup_index() -> bool:
+    """True when Ask Autara finds its passages with the offline local index (ASK_MODE backup or local)."""
+    return ask_mode() in ("backup", "local")
