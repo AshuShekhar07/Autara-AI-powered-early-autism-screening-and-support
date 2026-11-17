@@ -52,18 +52,23 @@ def build_user_prompt(req: InsightRequest, chunks: list[Chunk]) -> str:
 
 
 def generate_insight(req: InsightRequest, provider=None, retrieve=None) -> InsightResponse:
-    from app.llm.factory import get_provider
+    """INSIGHTS_MODE=gemini: Gemini finds and writes. backup: passages found with the offline local index and written
+    by the backup writer (e.g. Groq); same prompt, same validator, same one retry."""
+    from app.llm import factory
 
-    retrieve = retrieve or retriever.retrieve
+    backup = config.insights_mode() == "backup"
     system = load_prompt()
     fail = lambda reasons, chunks=(), model="": InsightResponse(   # noqa: E731
         status="failed", model=model, promptVersion=PROMPT_NAME,
         retrievedChunkIds=[c.id for c in chunks], failureReasons=reasons)
 
     try:
-        provider = provider or get_provider()
+        if provider is None:
+            provider = factory.get_backup_llm_provider(config.insights_timeout_s()) if backup else factory.get_provider()
         query = retriever.build_query(_flagged_areas(req), _patterns(req))
-        chunks = retrieve(query)
+        chunks = retrieve(query) if retrieve else retriever.retrieve(query, backup=backup)
+        if backup:
+            chunks = chunks[:config.backup_max_passages()]   # fewer passages = fewer tokens on a free plan
     except LLMError as exc:
         return fail([exc.code])
 

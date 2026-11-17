@@ -17,7 +17,7 @@ def get_local_provider() -> LLMProvider:
     return local.build()
 
 
-def get_backup_llm_provider() -> LLMProvider:
-    """Backup writer for Ask Autara (needs BACKUP_LLM_API_KEY). It cannot embed."""
+def get_backup_llm_provider(timeout_s: float | None = None) -> LLMProvider:
+    """Backup writer for Ask Autara and insights (needs BACKUP_LLM_API_KEY). It cannot embed."""
     from app.llm import openai_compat
-    return openai_compat.build()
+    return openai_compat.build(timeout_s)

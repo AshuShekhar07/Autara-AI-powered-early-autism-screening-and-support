@@ -81,8 +81,8 @@ class OpenAICompatProvider:
         raise LLMError("EMBEDDING_ERROR", "The backup writer only writes answers; the local model finds the passages.")
 
 
-def build() -> OpenAICompatProvider:
+def build(timeout_s: float | None = None) -> OpenAICompatProvider:
     key = config.backup_llm_api_key()
     if not key:
         raise LLMError("LLM_NOT_CONFIGURED", "BACKUP_LLM_API_KEY is not set.")
-    return OpenAICompatProvider(key, config.backup_llm_model(), config.backup_llm_base_url(), config.backup_llm_timeout_s())
+    return OpenAICompatProvider(key, config.backup_llm_model(), config.backup_llm_base_url(), timeout_s or config.backup_llm_timeout_s())

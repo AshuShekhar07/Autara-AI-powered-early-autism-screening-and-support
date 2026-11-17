@@ -122,3 +122,17 @@ def backup_llm_timeout_s() -> float:
 def ask_uses_backup_index() -> bool:
     """True when Ask Autara finds its passages with the offline local index (ASK_MODE backup or local)."""
     return ask_mode() in ("backup", "local")
+
+
+def insights_mode() -> str:
+    """Which AI writes clinician insights: gemini | backup (offline passages + the backup writer, e.g. Groq).
+    Defaults to the same choice as Ask Autara: ASK_MODE=backup means insights use the backup writer too."""
+    mode = os.environ.get("INSIGHTS_MODE", "").strip().lower()
+    if mode in ("gemini", "backup"):
+        return mode
+    return "backup" if ask_mode() == "backup" else "gemini"
+
+
+def insights_timeout_s() -> float:
+    # insights are longer than answers and the Node backend waits up to 60 s for them
+    return float(os.environ.get("INSIGHTS_LLM_TIMEOUT_MS", "40000")) / 1000

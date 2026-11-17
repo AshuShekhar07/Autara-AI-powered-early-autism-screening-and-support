@@ -82,3 +82,8 @@ the checks (citations, banned wording, doses), the quoted passages are shown ins
 
 Privacy: the writer receives the question and public reference passages only. The question is free text, so remind caregivers not to type names.
 (Old `MISTRAL_*` settings and `ASK_MODE=mistral` still work.)
+
+## Clinician insights use the same writer
+With `ASK_MODE=backup` the clinician's "Generate insight" also uses the offline index and the backup writer, so **Gemini is not needed at all**
+(set `INSIGHTS_MODE=gemini` to override). A rate limit or invalid reply shows as a *failed* insight with a reason; click generate again after a minute.
+The clinician must still read and approve every insight.
