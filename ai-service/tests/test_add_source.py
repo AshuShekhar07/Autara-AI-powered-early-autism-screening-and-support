@@ -1,4 +1,3 @@
-import shutil
 from pathlib import Path
 
 import pytest
@@ -6,8 +5,11 @@ import yaml
 
 from app.rag import add_source, ingest
 
-SHIPPED = Path(__file__).resolve().parent.parent / "knowledge" / "sources.yaml"
-
+TEMPLATE = """# Approved reference documents for the RAG corpus.
+#
+# Only files listed here are ingested.
+sources: []
+"""
 
 @pytest.fixture
 def doc(tmp_path):
@@ -18,7 +20,7 @@ def doc(tmp_path):
 
 
 def _prepare(kdir):
-    shutil.copy(SHIPPED, kdir / "sources.yaml")   # the real shipped file: comments + "sources: []"
+    (kdir / "sources.yaml").write_text(TEMPLATE, encoding="utf-8")   # comments + "sources: []" (never the developer's own local file)
 
 
 def test_adds_first_entry_keeps_comments_and_ingests(kdir, doc, fake):

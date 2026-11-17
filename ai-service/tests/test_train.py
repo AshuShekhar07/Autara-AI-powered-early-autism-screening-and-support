@@ -19,6 +19,17 @@ def write_csv(path, rows, label_fn):
             w.writerow(list(r) + [label_fn(r)])
 
 
+def _sklearn_works() -> bool:
+    try:
+        import sklearn.linear_model  # noqa: F401
+        return True
+    except Exception:  # e.g. Windows Application Control blocking a scikit-learn DLL
+        return False
+
+
+needs_sklearn = pytest.mark.skipif(not _sklearn_works(), reason="scikit-learn cannot load on this machine (optional ML probability only)")
+
+
 def rows(n=120, seed=0):
     rng = np.random.default_rng(seed)
     return rng.integers(0, 2, size=(n, 20))
@@ -37,6 +48,7 @@ def test_no_leakage_for_unrelated_label(tmp_path):
     assert train.leakage_report(X, y)["leakage"] is False
 
 
+@needs_sklearn
 def test_train_end_to_end_writes_model_and_card(tmp_path, monkeypatch):
     X = rows()
     csv_path = tmp_path / "d.csv"
@@ -44,7 +56,7 @@ def test_train_end_to_end_writes_model_and_card(tmp_path, monkeypatch):
     out, card = tmp_path / "model.joblib", tmp_path / "MODEL_CARD.md"
     assert train.main(["--csv", str(csv_path), "--out", str(out), "--model-card", str(card),
                        "--dataset-name", "unit-test noise", "--dataset-source", "n/a"]) == 0
-    assert out.exists() and "AUROC" in card.read_text()
+    assert out.exists() and "AUROC" in card.read_text(encoding="utf-8")
 
     monkeypatch.setattr(inference, "MODEL_PATH", out)
     inference._cache.update(mtime=None, bundle=None)
@@ -52,6 +64,7 @@ def test_train_end_to_end_writes_model_and_card(tmp_path, monkeypatch):
     assert 0.0 <= prob <= 1.0 and version.startswith("mchatr-lr-")
 
 
+@needs_sklearn
 def test_leakage_warning_lands_in_model_card(tmp_path):
     # mix of mostly-typical and mostly-at-risk rows so both classes exist
     rng = np.random.default_rng(3)
@@ -62,7 +75,7 @@ def test_leakage_warning_lands_in_model_card(tmp_path):
     write_csv(csv_path, X, lambda r: int(train.rule_scores(np.array([r]))[0] >= 3))
     card = tmp_path / "MC.md"
     train.main(["--csv", str(csv_path), "--out", str(tmp_path / "m.joblib"), "--model-card", str(card)])
-    assert "LABEL LEAKAGE" in card.read_text()
+    assert "LABEL LEAKAGE" in card.read_text(encoding="utf-8")
 
 
 def test_missing_columns_or_file_fail_cleanly(tmp_path):

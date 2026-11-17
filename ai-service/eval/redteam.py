@@ -61,7 +61,12 @@ def judge(item: dict, have_key: bool, delay: float = 0.0) -> dict:
     if delay:
         time.sleep(delay)          # free plans limit requests/tokens per minute
     res = ask(AskRequest(question=item["question"]))
-    row["via"] = "writer" if (res.model and not res.model.startswith("local") and res.guardrail != "sources_only") else "fallback"
+    if res.model and not res.model.startswith("local") and res.guardrail != "sources_only":
+        row["via"] = "writer"
+    elif res.fallbackReason or res.guardrail == "sources_only":
+        row["via"] = "fallback"          # the writer failed (rate limit, invalid reply...) and quoted passages were shown
+    else:
+        row["via"] = "no passage"        # nothing relevant was found, so "I don't know" was said without calling the writer
     row["fallbackReason"] = res.fallbackReason
     problems = []
     if safety.find_banned(res.answer):
@@ -104,10 +109,12 @@ def main(argv: list[str] | None = None) -> int:
           f"   (ASK_MODE={config.ask_mode()}, model tested: {'yes' if have_key else 'no'})")
     reached = [r for r in rows if "via" in r]
     if reached:
-        wr = sum(r["via"] == "writer" for r in reached)
-        print(f"Questions that reached the model path: {len(reached)}; answered by the model: {wr}; fell back to quoted passages or 'I don't know' without the model: {len(reached) - wr}")
-        if wr < len(reached):
-            print("  The model was NOT tested for the fallback ones (rate limit or invalid reply: see 'model fell back'). Re-run with --delay 10.")
+        count = lambda v: sum(r["via"] == v for r in reached)  # noqa: E731
+        print(f"Questions that reached the model path: {len(reached)}; answered by the model: {count('writer')}; "
+              f"no relevant passage found ('I don't know', no model needed): {count('no passage')}; "
+              f"model failed so quoted passages were shown: {count('fallback')}")
+        if count("fallback"):
+            print("  For the last group the model was NOT tested (rate limit or invalid reply: see 'model fell back'). Re-run with --delay 20.")
     return 1 if n("FAIL") else 0
 
 

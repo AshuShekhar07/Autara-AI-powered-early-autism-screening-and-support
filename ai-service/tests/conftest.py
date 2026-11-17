@@ -17,6 +17,22 @@ def _env(monkeypatch, tmp_path):
     monkeypatch.setenv("KNOWLEDGE_DIR", str(kdir))
     monkeypatch.setenv("RAG_MIN_SIMILARITY", "0.2")   # hashed-word fake embeddings are coarser than real ones
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    # A developer's real ai-service/.env is loaded at import: never let it leak into tests (modes, keys, thresholds)
+    monkeypatch.setenv("ASK_MODE", "auto")
+    for name in ("BACKUP_LLM_API_KEY", "BACKUP_LLM_BASE_URL", "BACKUP_LLM_MODEL", "BACKUP_LLM_TIMEOUT_MS", "MISTRAL_API_KEY",
+                 "MISTRAL_MODEL", "MISTRAL_BASE_URL", "MISTRAL_TIMEOUT_MS", "RAG_BACKUP_MIN_SIMILARITY", "ASK_BACKUP_MAX_PASSAGES",
+                 "RAG_TOP_K", "LLM_PROVIDER", "LLM_MODEL", "EMBEDDING_MODEL"):
+        monkeypatch.delenv(name, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _no_real_network(monkeypatch):
+    """Tests must never call a real AI service (it would spend a real key's quota). Mocked transports are unaffected."""
+    import httpx
+
+    def blocked(self, request):
+        raise AssertionError(f"a test tried a real network call to {request.url}")
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", blocked)
 
 
 @pytest.fixture
