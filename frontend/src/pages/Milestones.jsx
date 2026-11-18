@@ -134,9 +134,11 @@ export default function Milestones() {
   const ageMonths   = calcAgeMonths(childDob)
   const relevantGroup = getRelevantAgeGroup(ageMonths)
 
-  const [activeGroup, setActiveGroup] = React.useState(
-    relevantGroup ? relevantGroup.range : MILESTONE_AGES[0].range
-  )
+  // The tab follows the child's age (children load after the first render, and the parent can switch child);
+  // once the parent picks a tab themselves, that choice wins until the child changes.
+  const [pickedGroup, setActiveGroup] = React.useState(null)
+  React.useEffect(() => { setActiveGroup(null) }, [activeChild?.id])
+  const activeGroup = pickedGroup ?? (relevantGroup ? relevantGroup.range : MILESTONE_AGES[0].range)
 
   const currentGroup = MILESTONE_AGES.find(g => g.range === activeGroup) || MILESTONE_AGES[0]
 

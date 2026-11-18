@@ -3,18 +3,24 @@
  *
  *   npm run seed:admin -- someone@example.com
  *
- * The person must have signed up first (signup deliberately blocks role "admin").
+ * The person must have signed up first (signup deliberately blocks role "admin"), and the email must be on
+ * ADMIN_EMAILS in backend/.env. Usually you don't need this script: the hidden /admin/login page does the same.
  * Reads MONGODB_URI from backend/.env.
  */
 require('dotenv').config()
 const mongoose = require('mongoose')
 const User = require('../models/User')
 const AuditLog = require('../models/AuditLog')
+const { isAllowedAdmin } = require('../lib/adminAllowlist')
 
 async function main() {
   const email = (process.argv[2] || '').trim().toLowerCase()
   if (!email) {
     console.error('Usage: npm run seed:admin -- <email>')
+    process.exit(1)
+  }
+  if (!isAllowedAdmin(email)) {
+    console.error(`"${email}" is not on ADMIN_EMAILS in backend/.env, so it can't be an admin. Add it there first.`)
     process.exit(1)
   }
   if (!process.env.MONGODB_URI) {

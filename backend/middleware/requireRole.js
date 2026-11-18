@@ -1,6 +1,7 @@
 const User = require('../models/User')
 const { AppError, asyncHandler } = require('../utils/respond')
 const { isClinicalRole } = require('../utils/roles')
+const { isAllowedAdmin } = require('../lib/adminAllowlist')
 
 /**
  * requireRole(allowedRoles, options)
@@ -34,6 +35,12 @@ function requireRole(allowedRoles, { allowUnverified = false } = {}) {
 
     if (!allowedRoles.includes(user.role)) {
       throw new AppError(403, 'FORBIDDEN_ROLE', `Access denied. Required role: ${allowedRoles.join(' or ')}.`)
+    }
+
+    // An admin account only works while its email is on the ADMIN_EMAILS list (backend/.env).
+    // Removing an address from the list switches that admin off at once, even if the database still says "admin".
+    if (user.role === 'admin' && !isAllowedAdmin(user.email)) {
+      throw new AppError(403, 'NOT_ADMIN', "You're not an admin. This area is only for Autara administrators.")
     }
 
     if (isClinicalRole(user.role) && !user.verified && !allowUnverified) {

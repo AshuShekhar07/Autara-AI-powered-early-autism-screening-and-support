@@ -459,3 +459,7 @@
   .db-mobile-topbar .db-user-menu__trigger { padding: 3px; }
   .db-mobile-topbar .db-topnav__right { gap: 8px; }
 }
+
+/* six tabs on narrow phones: let labels wrap and shrink instead of pushing the bar wider than the screen */
+.db-tab-btn { min-width: 0; text-align: center; line-height: 1.15; }
+@media (max-width: 360px) { .db-tab-btn { font-size: .58rem; padding: 6px 2px; } }

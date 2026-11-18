@@ -2,3 +2,4 @@
 process.env.NODE_ENV = 'test'
 process.env.AI_SERVICE_KEY = 'test-internal-key'
 process.env.ALLOWED_ORIGINS = 'http://localhost:3000'
+process.env.ADMIN_EMAILS = 'adm@demo.test, Boss@Demo.test'

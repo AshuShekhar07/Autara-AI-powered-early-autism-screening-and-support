@@ -6,13 +6,13 @@ jest.mock('../lib/firebaseAdmin', () => ({
   auth: () => ({
     verifyIdToken: async (token, checkRevoked) => {
       global.__verifyCalls.push({ token, checkRevoked: !!checkRevoked })
-      const [uid, email] = String(token).split('|')
+      const [uid, email, flag] = String(token).split('|')   // "uid|email|unverified" = email not yet confirmed
       const fail = (code) => { throw Object.assign(new Error(code), { code }) }
       if (!uid || uid === 'invalid') fail('auth/invalid-id-token')
       if (uid === 'expired') fail('auth/id-token-expired')
       if (checkRevoked && uid === 'revoked') fail('auth/id-token-revoked')
       if (checkRevoked && uid === 'disabled') fail('auth/user-disabled')
-      return { uid, email }
+      return { uid, email, email_verified: flag !== 'unverified' }
     },
   }),
 }))

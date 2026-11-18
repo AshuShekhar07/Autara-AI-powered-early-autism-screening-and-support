@@ -117,3 +117,8 @@
     padding: 0 16px;
   }
 }
+
+/* hidden admin login page */
+.admin-login__note { font-size: .84rem; color: var(--ink-muted); margin-bottom: 18px; padding: 10px 12px; background: var(--bg-tint); border-left: 3px solid var(--black); border-radius: var(--r-sm); }
+.admin-login__note a { text-decoration: underline; }
+.admin-login__switch { margin-top: 18px; font-size: .86rem; color: var(--ink-muted); text-align: center; }

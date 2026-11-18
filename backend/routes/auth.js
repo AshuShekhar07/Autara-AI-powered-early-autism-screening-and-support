@@ -1,5 +1,5 @@
 const express             = require('express')
-const { signup, me }      = require('../controllers/authController')
+const { signup, me, adminAccess } = require('../controllers/authController')
 const verifyFirebaseToken = require('../middleware/verifyFirebaseToken')
 const requireRole         = require('../middleware/requireRole')
 const { ROLES }           = require('../utils/roles')
@@ -18,5 +18,11 @@ router.post('/signup', verifyFirebaseToken, signup)
  * after login to pick the dashboard. Unverified clinical users are allowed here.
  */
 router.get('/me', verifyFirebaseToken, requireRole(ROLES, { allowUnverified: true }), me)
+
+/**
+ * POST /api/auth/admin-access
+ * Hidden admin login/sign-up. Only emails on ADMIN_EMAILS (backend/.env) get in.
+ */
+router.post('/admin-access', verifyFirebaseToken, adminAccess)
 
 module.exports = router

@@ -76,3 +76,7 @@
 .sh-list { display: flex; flex-direction: column; }
 .sh-row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 4px; border-bottom: 1px solid var(--border); color: var(--ink); text-decoration: none; }
 .sh-row:hover { background: var(--bg-tint); text-decoration: none; }
+
+/* resume notice + "in progress" badge (saved screening drafts) */
+.sc-resume { justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.sc-child-btn__draft { margin-top: 4px; font-size: .78rem; font-weight: 600; color: var(--brand-dk); }

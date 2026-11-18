@@ -10,6 +10,7 @@ import TherapistDashboard  from './pages/clinical/TherapistDashboard'
 import ChildWorkspace      from './pages/clinical/ChildWorkspace'
 import CasePage            from './pages/clinical/CasePage'
 import AdminDashboard      from './pages/admin/AdminDashboard'
+import AdminLogin          from './pages/admin/AdminLogin'
 import Screening           from './pages/Screening'
 import ScreeningResult     from './pages/ScreeningResult'
 import Behaviour           from './pages/Behaviour'
@@ -142,6 +143,9 @@ export default function App() {
 
           {/* Old path → role home */}
           <Route path="/clinician-dashboard" element={<RootRedirect />} />
+
+          {/* ── Hidden admin login (not linked anywhere; only ADMIN_EMAILS get in) ── */}
+          <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* ── Protected: admin ── */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />

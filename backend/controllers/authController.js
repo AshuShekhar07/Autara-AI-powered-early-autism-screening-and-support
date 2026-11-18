@@ -2,6 +2,8 @@ const User = require('../models/User')
 const { AppError, ok, created, asyncHandler } = require('../utils/respond')
 const { cleanString, parseDate, requireBodyObject } = require('../utils/validate')
 const { isCareRole } = require('../utils/roles')
+const { isAllowedAdmin } = require('../lib/adminAllowlist')
+const { audit } = require('../lib/audit')
 
 const SIGNUP_ROLES = ['caregiver', 'patient', 'therapist', 'clinician'] // admin is never self-service
 
@@ -84,4 +86,52 @@ const me = asyncHandler(async (req, res) => {
   })
 })
 
-module.exports = { signup, me }
+/**
+ * POST /api/auth/admin-access   (used only by the hidden /admin/login page)
+ *
+ * Body (optional): { name }
+ *
+ * Lets an address on the ADMIN_EMAILS list into the admin panel:
+ *   - not on the list            → 403 NOT_ADMIN ("You're not an admin")
+ *   - email not yet verified     → 403 EMAIL_NOT_VERIFIED (stops someone who registers the address in
+ *                                   Firebase before its real owner from becoming admin)
+ *   - no Autara profile yet      → creates one with role admin ("sign up")
+ *   - profile with another role  → switches it to admin (audited)
+ */
+const adminAccess = asyncHandler(async (req, res) => {
+  const { uid } = req.firebaseUser
+  const email = (req.firebaseUser.email || '').toLowerCase()
+
+  if (!isAllowedAdmin(email)) {
+    await audit(req, 'ADMIN_ACCESS_DENIED', { type: 'user', id: uid })
+    throw new AppError(403, 'NOT_ADMIN', "You're not an admin. This area is only for Autara administrators.")
+  }
+  if (req.firebaseUser.email_verified !== true) {
+    throw new AppError(403, 'EMAIL_NOT_VERIFIED', 'Please confirm your email address first: open the link we email you, then log in again.')
+  }
+
+  const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {}
+  let user = await User.findOne({ $or: [{ uid }, { email }] })
+  if (user && user.uid !== uid) {
+    throw new AppError(409, 'ACCOUNT_EXISTS', 'This email is linked to a different sign-in. Contact the other administrator.')
+  }
+
+  if (!user) {
+    const name = cleanString(body.name, { max: 120 }) || email.split('@')[0]
+    user = await User.create({ uid, name, email, role: 'admin', verified: true, roleDetails: {} })
+    req.dbUser = user
+    await audit(req, 'ADMIN_CREATED', { type: 'user', id: uid })
+  } else if (user.role !== 'admin') {
+    const previousRole = user.role
+    user.role = 'admin'
+    user.verified = true
+    user.verificationStatus = undefined
+    await user.save()
+    req.dbUser = user
+    await audit(req, 'ADMIN_PROMOTED', { type: 'user', id: uid }, { previousRole })
+  }
+
+  return ok(res, { uid: user.uid, name: user.name, email: user.email, role: 'admin', verified: true, roleDetails: {} })
+})
+
+module.exports = { signup, me, adminAccess }

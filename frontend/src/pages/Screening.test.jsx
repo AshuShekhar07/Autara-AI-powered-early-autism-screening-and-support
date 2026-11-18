@@ -121,3 +121,38 @@ describe('Screening wizard', () => {
     expect(screen.getByText(official)).toBeInTheDocument()
   })
 })
+
+describe('Screening wizard keeps your place', () => {
+  it('leaving half-way and coming back reopens the same question with the answers kept (it used to start over)', async () => {
+    const user = userEvent.setup()
+    const first = setup([{ id: 'c1', name: 'Alex', ageMonths: 22 }])
+    await user.click(await screen.findByRole('button', { name: /Alex/ }))
+    for (let i = 1; i <= 5; i++) {
+      await user.click(screen.getByLabelText('Yes'))
+      await user.click(screen.getByRole('button', { name: /^Next$/ }))
+    }
+    expect(screen.getByText('Question 6 of 20')).toBeInTheDocument()
+    first.unmount()                                   // user clicked another menu item
+
+    setup([{ id: 'c1', name: 'Alex', ageMonths: 22 }]) // ...and came back
+    expect(await screen.findByText('Question 6 of 20')).toBeInTheDocument()
+    expect(screen.getByText(/Welcome back/).closest('.sc-resume')).toHaveTextContent('5 of 20 answered')
+    await user.click(screen.getByRole('button', { name: /^Back$/ }))
+    expect(screen.getByLabelText('Yes')).toBeChecked() // question 5's answer is still there
+  })
+
+  it('"Start over" throws the saved answers away', async () => {
+    const user = userEvent.setup()
+    const first = setup([{ id: 'c1', name: 'Alex', ageMonths: 22 }])
+    await user.click(await screen.findByRole('button', { name: /Alex/ }))
+    await user.click(screen.getByLabelText('Yes'))
+    await user.click(screen.getByRole('button', { name: /^Next$/ }))
+    first.unmount()
+    setup([{ id: 'c1', name: 'Alex', ageMonths: 22 }])
+    await user.click(await screen.findByRole('button', { name: 'Start over' }))
+    expect(screen.getByRole('heading', { name: /Who is this screening for/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Alex/ }))
+    expect(screen.getByText('Question 1 of 20')).toBeInTheDocument()
+    expect(screen.getByLabelText('Yes')).not.toBeChecked()
+  })
+})

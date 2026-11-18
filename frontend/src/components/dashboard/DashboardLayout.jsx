@@ -179,8 +179,9 @@ export default function DashboardLayout({ children, activeNav = 'dashboard', pag
   const home = homeRouteFor(role, verified)
 
   async function handleLogout() {
+    const wasAdmin = role === 'admin'
     await logout()
-    navigate('/login', { replace: true })
+    navigate(wasAdmin ? '/admin/login' : '/login', { replace: true })   // admins go back to their own hidden page
   }
 
   const fullName = profileData?.name || user?.displayName || null
@@ -259,7 +260,7 @@ export default function DashboardLayout({ children, activeNav = 'dashboard', pag
       {/* ── Mobile bottom tab bar ── */}
       <nav className="db-bottom-tabs" aria-label="Mobile navigation">
         <div className="db-bottom-tabs__inner">
-          {navItems.slice(0, 5).map(item => {
+          {navItems.slice(0, 6).map(item => {   /* all items fit (max 6): Reports used to be missing on phones */
             const isActive = item.id === activeNav
             return (
               <Link

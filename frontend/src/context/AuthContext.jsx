@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth'
 import { auth } from '../lib/firebase'
 import { api } from '../lib/api'
+import { clearSessionPrefix } from '../lib/safeStorage'
 
 const AuthContext = createContext(null)
 
@@ -73,6 +74,7 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    clearSessionPrefix('autara.')   // unfinished screening / form drafts and the Ask conversation stay on this device only until log out
     await signOut(auth)
   }
 

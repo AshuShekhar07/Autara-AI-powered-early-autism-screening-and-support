@@ -1,5 +1,6 @@
 import React, { useId, useState } from 'react'
 import { api } from '../../lib/api'
+import { useSessionState } from '../../lib/useSessionState'
 import { ANTECEDENTS, BEHAVIOURS, CONSEQUENCES, SETTINGS } from '../../lib/behaviourCategories'
 import './behaviour.css'
 
@@ -32,16 +33,18 @@ function ChipGroup({ legend, name, options, value, onChange }) {
  */
 export default function LogBehaviourForm({ childId, onLogged }) {
   const uid = useId()
-  const [antecedent, setAntecedent]   = useState('')
-  const [behaviour, setBehaviour]     = useState('')
-  const [consequence, setConsequence] = useState('')
-  const [intensity, setIntensity]     = useState(3)
-  const [when, setWhen]               = useState('')      // '' = now
-  const [duration, setDuration]       = useState('')
-  const [setting, setSetting]         = useState('home')
-  const [aNotes, setANotes]           = useState('')
-  const [bNotes, setBNotes]           = useState('')
-  const [cNotes, setCNotes]           = useState('')
+  // Half-filled entries survive leaving the page and coming back (this tab only; cleared on log out).
+  const k = (field) => (childId ? `autara.behaviourDraft.${childId}.${field}` : null)
+  const [antecedent, setAntecedent]   = useSessionState(k('antecedent'), '')
+  const [behaviour, setBehaviour]     = useSessionState(k('behaviour'), '')
+  const [consequence, setConsequence] = useSessionState(k('consequence'), '')
+  const [intensity, setIntensity]     = useSessionState(k('intensity'), 3)
+  const [when, setWhen]               = useSessionState(k('when'), '')      // '' = now
+  const [duration, setDuration]       = useSessionState(k('duration'), '')
+  const [setting, setSetting]         = useSessionState(k('setting'), 'home')
+  const [aNotes, setANotes]           = useSessionState(k('aNotes'), '')
+  const [bNotes, setBNotes]           = useSessionState(k('bNotes'), '')
+  const [cNotes, setCNotes]           = useSessionState(k('cNotes'), '')
   const [saving, setSaving]           = useState(false)
   const [error, setError]             = useState('')
   const [saved, setSaved]             = useState(false)
@@ -64,7 +67,7 @@ export default function LogBehaviourForm({ childId, onLogged }) {
       if (duration !== '') payload.durationMinutes = Number(duration)
       const { log } = await api.post(`/api/children/${childId}/behaviour-logs`, payload)
       setAntecedent(''); setBehaviour(''); setConsequence(''); setIntensity(3)
-      setWhen(''); setDuration(''); setANotes(''); setBNotes(''); setCNotes('')
+      setWhen(''); setDuration(''); setSetting('home'); setANotes(''); setBNotes(''); setCNotes('')
       setSaved(true)
       onLogged?.(log)
     } catch (err) {

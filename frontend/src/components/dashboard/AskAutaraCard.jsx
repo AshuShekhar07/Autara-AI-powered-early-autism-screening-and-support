@@ -1,9 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { useChildren } from '../../context/ChildContext'
 import { api } from '../../lib/api'
+import { safeSession } from '../../lib/safeStorage'
+import { useSessionState } from '../../lib/useSessionState'
 import { DISCLAIMER } from '../../lib/screeningCopy'
 import { safeHttpUrl } from '../../lib/safeUrl'
 import './AskAutaraCard.css'
+
+const ASK_KEY = 'autara.askConversation'
 
 const GUARDRAIL_LABEL = {
   urgent_safety: 'Urgent safety',
@@ -19,15 +23,23 @@ const GUARDRAIL_LABEL = {
  * Ask Autara — Q&A grounded ONLY in the approved reference material.
  * Every reply lists its sources; when it can't answer it says so. It never diagnoses, never gives
  * medication advice, and sends emergencies to a clinician / emergency services (see the AI service guardrails).
- * The conversation lives in this component's state only (nothing is stored).
+ * The conversation is kept in this browser tab only (sessionStorage) so it survives moving between pages; it is
+ * never sent to the server for storage and is cleared on log out.
  * Props: full (page layout: taller history)
  */
 export default function AskAutaraCard({ full = false }) {
   const { activeChild } = useChildren()
   const [question, setQuestion] = useState('')
   const [useContext, setUseContext] = useState(true)
-  const [turns, setTurns] = useState([])       // [{ q, a?: { answer, sources, guardrail }, error? }]
+  // [{ q, a?: { answer, sources, guardrail }, error? }] — kept for this tab so the conversation survives moving between
+  // pages (shared by the dashboard card and the /ask page); cleared on log out. A question that was still waiting when
+  // the page was left is shown as interrupted.
+  const [turns, setTurns] = useSessionState(ASK_KEY, [])
   const [busy, setBusy] = useState(false)
+  const shown = turns.map((t) => (t.a || t.error || (busy && t === turns[turns.length - 1]) ? t
+    : { ...t, error: 'You left the page before this answer arrived. Please ask again.' }))
+  const mounted = useRef(true)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const logRef = useRef(null)
 
   // Keep the newest reply in view by scrolling the conversation box only — never the whole page
@@ -36,6 +48,16 @@ export default function AskAutaraCard({ full = false }) {
     const log = logRef.current
     if (log && turns.length) log.scrollTop = log.scrollHeight
   }, [turns])
+
+  /** Stores the reply — also when the user has already moved to another page (then straight into the saved conversation). */
+  function finish(index, patch) {
+    if (mounted.current) {
+      setTurns((t) => t.map((turn, i) => (i === index ? { ...turn, ...patch } : turn)))
+    } else {
+      const saved = safeSession.get(ASK_KEY) || []
+      if (saved[index]) { saved[index] = { ...saved[index], ...patch }; safeSession.set(ASK_KEY, saved) }
+    }
+  }
 
   async function submit(e) {
     e.preventDefault()
@@ -48,12 +70,11 @@ export default function AskAutaraCard({ full = false }) {
     try {
       const body = { question: q }
       if (useContext && activeChild) body.childId = activeChild.id
-      const a = await api.post('/api/assistant/ask', body)
-      setTurns((t) => t.map((turn, i) => (i === index ? { ...turn, a } : turn)))
+      finish(index, { a: await api.post('/api/assistant/ask', body) })
     } catch (err) {
-      setTurns((t) => t.map((turn, i) => (i === index ? { ...turn, error: err.message } : turn)))
+      finish(index, { error: err.message })
     }
-    setBusy(false)
+    if (mounted.current) setBusy(false)
   }
 
   return (
@@ -67,7 +88,7 @@ export default function AskAutaraCard({ full = false }) {
 
         <div ref={logRef} className={`ask-log${full ? ' ask-log--full' : ''}`} role="log" aria-live="polite" aria-label="Conversation">
           {turns.length === 0 && <p className="sc-muted">No questions yet.</p>}
-          {turns.map((t, i) => (
+          {shown.map((t, i) => (
             <div key={i} className="ask-turn">
               <p className="ask-q"><span className="bh-sr">You asked: </span>{t.q}</p>
               {!t.a && !t.error && <p className="sc-muted" role="status">Looking through the reference material…</p>}

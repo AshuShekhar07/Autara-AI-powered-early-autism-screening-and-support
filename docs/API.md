@@ -61,8 +61,9 @@ admin → never (`403 ADMIN_NO_CHILD_ACCESS`). Any other "no" is `404 CHILD_NOT_
 
 | Method & path | Roles | Description |
 | --- | --- | --- |
-| `POST /api/auth/signup` | any signed-in Firebase user | Body `{ name, role, roleDetails }`. **`uid` and `email` come from the verified token, never the body.** Roles: caregiver, patient, therapist, clinician (admins are promoted with `npm run seed:admin`). `roleDetails`: `{childName, childDob}` or `{orgName, licenseNumber}`. Clinical accounts start unverified. → `201 { uid, role, verified }` |
+| `POST /api/auth/signup` | any signed-in Firebase user | Body `{ name, role, roleDetails }`. **`uid` and `email` come from the verified token, never the body.** Roles: caregiver, patient, therapist, clinician (admins use the hidden `/admin/login` page — see `POST /api/auth/admin-access`). `roleDetails`: `{childName, childDob}` or `{orgName, licenseNumber}`. Clinical accounts start unverified. Admin is never a sign-up role. → `201 { uid, role, verified }` |
 | `GET /api/auth/me` | any (unverified clinical allowed) | `{ uid, name, email, role, verified, roleDetails }` |
+| `POST /api/auth/admin-access` | any signed-in Firebase user | Used only by the hidden `/admin/login` page. Body `{ name? }`. Lets in **only** emails listed in `ADMIN_EMAILS` (backend `.env`) whose address is confirmed in Firebase: creates the admin profile on first use, switches an existing account on that email to admin (audited `ADMIN_PROMOTED`). Otherwise `403 NOT_ADMIN` ("You're not an admin", audited `ADMIN_ACCESS_DENIED`) or `403 EMAIL_NOT_VERIFIED`. Every admin route also re-checks the list, so removing an email switches that admin off. → `200 { uid, name, email, role: 'admin', verified: true }` |
 
 ## Children, care team, milestones
 

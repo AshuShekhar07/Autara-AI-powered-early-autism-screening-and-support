@@ -8,14 +8,17 @@ import { DISCLAIMER } from '../lib/screeningCopy'
 import './Screening.css'
 
 const draftKey = (childId) => `autara.screeningDraft.${childId}`
+const CURRENT_KEY = 'autara.screeningDraft.current'   // which child's screening was open last
 
 /**
  * Screening wizard (M-CHAT-R)
  *
  *   pick child → age check → one question per screen → review → submit → result page
  *
- * Answers live in React state; a draft is mirrored to sessionStorage (in try/catch) so a
- * refresh doesn't lose progress. The questionnaire text comes from the AI service (single
+ * Answers live in React state; a draft (answers, question number, step) is mirrored to sessionStorage
+ * (in try/catch) after every click. Leaving the page — another menu item, a refresh — and coming back
+ * reopens the screening exactly where it was, with a "Start over" option. Drafts are cleared on submit
+ * and on log out. The questionnaire text comes from the AI service (single
  * source of truth) via GET /api/screenings/instrument.
  */
 export default function Screening() {
@@ -31,6 +34,7 @@ export default function Screening() {
   const [answers, setAnswers] = useState({})           // { "1": "yes", ... }
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [resumed, setResumed] = useState(false)         // true = we reopened a saved draft
 
   const load = useCallback(async () => {
     setLoadError('')
@@ -48,22 +52,62 @@ export default function Screening() {
   const total = items.length
   const range = instrument?.ageRangeMonths || { min: 16, max: 30 }
 
+  // Coming back to this page: reopen the screening that was in progress.
+  useEffect(() => {
+    if (!children || !instrument || child) return
+    const currentId = safeSession.get(CURRENT_KEY)
+    const c = currentId && children.find((x) => x.id === currentId)
+    const draft = c && safeSession.get(draftKey(c.id))
+    if (!c || !draft?.answers || Object.keys(draft.answers).length === 0) return
+    if (c.ageMonths < range.min || c.ageMonths > range.max) return
+    setChild(c)
+    setAnswers(draft.answers)
+    setIndex(Math.min(draft.index || 0, Math.max(items.length - 1, 0)))
+    setStep(draft.step === 'review' ? 'review' : 'questions')
+    setResumed(true)
+  }, [children, instrument]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Closing the tab would lose the draft (it lives in this tab's storage) — let the browser ask first.
+  const inProgress = (step === 'questions' || step === 'review') && Object.keys(answers).length > 0 && !submitting
+  useEffect(() => {
+    if (!inProgress) return
+    const warn = (e) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [inProgress])
+
   function pickChild(c) {
     setChild(c)
     setSubmitError('')
     if (c.ageMonths < range.min || c.ageMonths > range.max) { setStep('age'); return }
     const draft = safeSession.get(draftKey(c.id))
-    if (draft?.answers) {
+    if (draft?.answers && Object.keys(draft.answers).length) {
       setAnswers(draft.answers)
       setIndex(Math.min(draft.index || 0, Math.max(total - 1, 0)))
+      setResumed(true)
     } else {
-      setAnswers({}); setIndex(0)
+      setAnswers({}); setIndex(0); setResumed(false)
     }
-    setStep('questions')
+    safeSession.set(CURRENT_KEY, c.id)
+    setStep(draft?.step === 'review' ? 'review' : 'questions')
   }
 
-  function saveDraft(nextAnswers, nextIndex) {
-    if (child) safeSession.set(draftKey(child.id), { answers: nextAnswers, index: nextIndex })
+  function saveDraft(nextAnswers, nextIndex, nextStep = step) {
+    if (!child) return
+    safeSession.set(draftKey(child.id), { answers: nextAnswers, index: nextIndex, step: nextStep })
+    safeSession.set(CURRENT_KEY, child.id)
+  }
+
+  function startOver() {
+    if (child) safeSession.remove(draftKey(child.id))
+    safeSession.remove(CURRENT_KEY)
+    setAnswers({}); setIndex(0); setResumed(false); setChild(null); setStep('child')
+  }
+
+  function changeStep(nextStep, nextIndex = index) {
+    setStep(nextStep)
+    setIndex(nextIndex)
+    saveDraft(answers, nextIndex, nextStep)
   }
 
   function choose(itemNumber, value) {
@@ -83,6 +127,7 @@ export default function Screening() {
     try {
       const { screening } = await api.post('/api/screenings', { childId: child.id, answers })
       safeSession.remove(draftKey(child.id))
+      safeSession.remove(CURRENT_KEY)
       navigate(`/screenings/${screening.id}`, { replace: true })
     } catch (err) {
       setSubmitError(err.message)
@@ -122,8 +167,18 @@ export default function Screening() {
           </div>
         )}
 
+        {resumed && child && (step === 'questions' || step === 'review') && (
+          <div className="status-box status-box--ok sc-resume" role="status">
+            <span>
+              <strong>Welcome back.</strong> Your answers for {child.name} were saved
+              ({Object.keys(answers).length} of {total} answered) — carry on where you left off.
+            </span>
+            <button type="button" className="sc-link-btn" onClick={startOver}>Start over</button>
+          </div>
+        )}
+
         {step === 'child' && (
-          <ChildStep children={children} range={range} onPick={pickChild} />
+          <ChildStep children={children} range={range} onPick={pickChild} total={total} />
         )}
 
         {step === 'age' && child && (
@@ -137,7 +192,7 @@ export default function Screening() {
             answer={answers[items[index].number]}
             onChoose={(v) => choose(items[index].number, v)}
             onBack={() => (index === 0 ? setStep('child') : goTo(index - 1))}
-            onNext={() => (index === total - 1 ? setStep('review') : goTo(index + 1))}
+            onNext={() => (index === total - 1 ? changeStep('review', index) : goTo(index + 1))}
           />
         )}
 
@@ -145,8 +200,8 @@ export default function Screening() {
           <ReviewStep
             items={items} answers={answers} child={child} unanswered={unanswered}
             submitting={submitting} error={submitError}
-            onEdit={(i) => { goTo(i); setStep('questions') }}
-            onBack={() => { goTo(total - 1); setStep('questions') }}
+            onEdit={(i) => changeStep('questions', i)}
+            onBack={() => changeStep('questions', total - 1)}
             onSubmit={submit}
           />
         )}
@@ -159,7 +214,7 @@ export default function Screening() {
 
 /* ─────────────────────────── steps ─────────────────────────── */
 
-function ChildStep({ children, range, onPick }) {
+function ChildStep({ children, range, onPick, total }) {
   if (children.length === 0) {
     return (
       <div className="sc-card sc-card--center">
@@ -179,6 +234,7 @@ function ChildStep({ children, range, onPick }) {
       <ul className="sc-child-list">
         {children.map((c) => {
           const inRange = c.ageMonths >= range.min && c.ageMonths <= range.max
+          const saved = inRange ? Object.keys(safeSession.get(draftKey(c.id))?.answers || {}).length : 0
           return (
             <li key={c.id}>
               <button type="button" className="sc-child-btn" onClick={() => onPick(c)}>
@@ -186,6 +242,7 @@ function ChildStep({ children, range, onPick }) {
                 <span className="sc-child-btn__meta">
                   {formatAgeMonths(c.ageMonths)} old{inRange ? '' : ' · outside the age range'}
                 </span>
+                {saved > 0 && <span className="sc-child-btn__draft">In progress · {saved} of {total} answered — tap to continue</span>}
               </button>
             </li>
           )
