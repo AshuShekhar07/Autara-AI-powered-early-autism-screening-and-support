@@ -37,7 +37,7 @@
 
 .auth-page__logo-mark {
   flex-shrink: 0;
-  filter: drop-shadow(0 4px 12px rgba(47,111,98,.22));
+  filter: none;
 }
 
 .auth-page__wordmark {
@@ -47,6 +47,7 @@
 }
 
 .auth-page__name {
+  margin: 0;
   font-family: var(--font-head);
   font-size: 1.6rem;
   font-weight: 700;
@@ -67,6 +68,7 @@
 .auth-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
+  border-top: 4px solid var(--black);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-md);
   padding: 36px 40px 40px;

@@ -407,10 +407,11 @@ export default function SignupForm() {
         }
       </button>
 
+      {/* The /terms and /privacy pages do not exist yet (the links led to the 404 page).
+          Put the links back once the real documents are published. */}
       <p className="auth-form__legal">
-        By creating an account you agree to our{' '}
-        <a href="/terms">Terms of Service</a> and{' '}
-        <a href="/privacy">Privacy Policy</a>.
+        By creating an account you agree to our <strong>Terms of Service</strong> and{' '}
+        <strong>Privacy Policy</strong>.
       </p>
     </form>
   )

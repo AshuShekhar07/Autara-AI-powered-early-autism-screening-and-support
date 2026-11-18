@@ -77,11 +77,11 @@ function TrendChart({ data }) {
         {/* tier boundaries */}
         {[[3, 'Medium ≥3'], [8, 'High ≥8']].map(([v, label]) => (
           <g key={v}>
-            <line x1={PAD.left} x2={W - PAD.right} y1={yOf(v)} y2={yOf(v)} stroke="#E0E6DE" strokeWidth="1" />
+            <line x1={PAD.left} x2={W - PAD.right} y1={yOf(v)} y2={yOf(v)} stroke="#DDE5E7" strokeWidth="1" />
             <text className="trend-axis-label" x={W - PAD.right + 4} y={yOf(v) + 3}>{label}</text>
           </g>
         ))}
-        <line x1={PAD.left} x2={W - PAD.right} y1={yOf(0)} y2={yOf(0)} stroke="#CDD6CB" strokeWidth="1" />
+        <line x1={PAD.left} x2={W - PAD.right} y1={yOf(0)} y2={yOf(0)} stroke="#C4D0D3" strokeWidth="1" />
         {data.length > 1 && <polyline className="trend-line" points={pts} />}
         {data.map((d, i) => (
           <g key={d.id || i}>

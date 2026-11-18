@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { homeRouteFor } from '../../lib/roles'
 import AuthToggle from '../../components/auth/AuthToggle'
@@ -10,12 +10,13 @@ import './AuthPage.css'
 /**
  * AuthPage — the single entry point for authentication.
  *
- * URL-aware: ?tab=signup opens the signup form directly.
- * (Used when the router points /signup → AuthPage with tab param.)
+ * URL-aware: /signup (or ?tab=signup) opens the signup form directly.
  */
 export default function AuthPage() {
   const [searchParams] = useSearchParams()
-  const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
+  const { pathname } = useLocation()
+  // /signup and /login?tab=signup both open the signup form.
+  const initialTab = pathname === '/signup' || searchParams.get('tab') === 'signup' ? 'signup' : 'login'
   const [activeTab, setActiveTab] = useState(initialTab)
   const { user, role, verified, loading } = useAuth()
 
@@ -28,7 +29,7 @@ export default function AuthPage() {
       <a href="#auth-card" className="skip-link">Skip to sign-in form</a>
 
       {/* Logo + wordmark */}
-      <div className="auth-page__brand" aria-hidden="true">
+      <div className="auth-page__brand">
         {/* Inline SVG leaf mark that mirrors the aesthetic of the logo asset */}
         <svg
           className="auth-page__logo-mark"
@@ -36,18 +37,18 @@ export default function AuthPage() {
           viewBox="0 0 44 44" fill="none"
           aria-hidden="true"
         >
-          <rect width="44" height="44" rx="12" fill="#2F6F62" />
+          <rect width="44" height="44" rx="9" fill="#0B7A75" />
           <path
             d="M22 10c0 0-10 6-10 14a10 10 0 0 0 20 0C32 16 22 10 22 10z"
             fill="rgba(255,255,255,.92)"
           />
           <path
             d="M22 14v18"
-            stroke="#2F6F62" strokeWidth="2" strokeLinecap="round"
+            stroke="#0B7A75" strokeWidth="2" strokeLinecap="round"
           />
         </svg>
         <div className="auth-page__wordmark">
-          <span className="auth-page__name">Autara</span>
+          <h1 className="auth-page__name">Autara</h1>
           <span className="auth-page__tagline">Early Support &amp; Guidance</span>
         </div>
       </div>

@@ -2,9 +2,9 @@ import React, { useState } from 'react'
 import '../behaviour/behaviour.css'
 
 /* Chart palette: single series → one brand hue; grid/axes recessive; text stays in ink tokens. */
-export const BRAND = '#2F6F62'
-export const GRID = '#E0E6DE'
-export const AXIS_TEXT = '#4E5A57'
+export const BRAND = '#0B7A75'
+export const GRID = '#DDE5E7'
+export const AXIS_TEXT = '#33434A'
 
 export const axisProps = { tick: { fill: AXIS_TEXT, fontSize: 11 }, tickLine: false, axisLine: { stroke: GRID } }
 

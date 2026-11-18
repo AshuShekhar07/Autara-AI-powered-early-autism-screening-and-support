@@ -95,7 +95,7 @@
   transition: background var(--dur) var(--ease);
 }
 .ms-item:last-child { border-bottom: none; }
-.ms-item:hover      { background: #fafbf9; }
+.ms-item:hover      { background: var(--bg-tint); }
 
 .ms-item__icon {
   display: flex;
@@ -140,7 +140,7 @@
   outline-offset: 2px;
 }
 
-.ms-status--neutral  { background: #ECEFF1; color: #546E7A; }
+.ms-status--neutral  { background: #ECEFF1; color: #4A5A63; }
 .ms-status--progress { background: var(--notice-bg); color: var(--notice-text); border: 1px solid var(--notice-border); }
 .ms-status--reviewed { background: var(--ok-bg); color: var(--ok-text); border: 1px solid var(--ok-border); }
 

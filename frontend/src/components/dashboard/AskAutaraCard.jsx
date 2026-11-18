@@ -28,9 +28,14 @@ export default function AskAutaraCard({ full = false }) {
   const [useContext, setUseContext] = useState(true)
   const [turns, setTurns] = useState([])       // [{ q, a?: { answer, sources, guardrail }, error? }]
   const [busy, setBusy] = useState(false)
-  const endRef = useRef(null)
+  const logRef = useRef(null)
 
-  useEffect(() => { endRef.current?.scrollIntoView?.({ block: 'nearest' }) }, [turns])
+  // Keep the newest reply in view by scrolling the conversation box only — never the whole page
+  // (scrollIntoView on mount used to jump the dashboard down to this card).
+  useEffect(() => {
+    const log = logRef.current
+    if (log && turns.length) log.scrollTop = log.scrollHeight
+  }, [turns])
 
   async function submit(e) {
     e.preventDefault()
@@ -60,7 +65,7 @@ export default function AskAutaraCard({ full = false }) {
           reference material and always show their sources. Autara can't diagnose or give medical advice.
         </p>
 
-        <div className={`ask-log${full ? ' ask-log--full' : ''}`} role="log" aria-live="polite" aria-label="Conversation">
+        <div ref={logRef} className={`ask-log${full ? ' ask-log--full' : ''}`} role="log" aria-live="polite" aria-label="Conversation">
           {turns.length === 0 && <p className="sc-muted">No questions yet.</p>}
           {turns.map((t, i) => (
             <div key={i} className="ask-turn">
@@ -87,7 +92,6 @@ export default function AskAutaraCard({ full = false }) {
               )}
             </div>
           ))}
-          <div ref={endRef} />
         </div>
 
         <form className="ask-form" onSubmit={submit}>

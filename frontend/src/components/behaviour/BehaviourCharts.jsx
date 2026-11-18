@@ -16,8 +16,8 @@ import './behaviour.css'
 function heatStyle(n, max) {
   if (!n) return { background: 'transparent' }
   const ratio = n / max
-  if (ratio <= 0.5) return { background: `rgba(30,84,74,${(0.08 + 0.55 * ratio).toFixed(2)})` }
-  return { background: `rgba(30,84,74,${(0.85 + 0.3 * (ratio - 0.5)).toFixed(2)})`, color: '#fff' }
+  if (ratio <= 0.5) return { background: `rgba(6,90,86,${(0.08 + 0.55 * ratio).toFixed(2)})` }
+  return { background: `rgba(6,90,86,${(0.85 + 0.3 * (ratio - 0.5)).toFixed(2)})`, color: '#fff' }
 }
 
 export function WeeklyTrendChart({ summary, ...state }) {
@@ -55,7 +55,7 @@ export function CategoryBarChart({ summary, ...state }) {
             <CartesianGrid stroke={GRID} horizontal={false} />
             <XAxis type="number" allowDecimals={false} {...axisProps} />
             <YAxis type="category" dataKey="label" width={150} {...axisProps} axisLine={false} />
-            <Tooltip cursor={{ fill: 'rgba(47,111,98,.06)' }} content={(p) => <Tip {...p} title={(r) => r.label}
+            <Tooltip cursor={{ fill: 'rgba(11,122,117,.08)' }} content={(p) => <Tip {...p} title={(r) => r.label}
               lines={(r) => [`${r.count} ${r.count === 1 ? 'entry' : 'entries'}`, `Average intensity ${r.averageIntensity}/5`]} />} />
             <Bar dataKey="count" fill={BRAND} barSize={16} radius={[0, 4, 4, 0]} isAnimationActive={false}>
               <LabelList dataKey="count" position="right" fill={AXIS_TEXT} fontSize={11} />
@@ -92,7 +92,7 @@ export function TimeChart({ summary, ...state }) {
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="label" interval={0} {...axisProps} />
             <YAxis allowDecimals={false} {...axisProps} axisLine={false} />
-            <Tooltip cursor={{ fill: 'rgba(47,111,98,.06)' }} content={(p) => <Tip {...p} title={(r) => r.full} lines={(r) => [`${r.count} ${r.count === 1 ? 'entry' : 'entries'}`]} />} />
+            <Tooltip cursor={{ fill: 'rgba(11,122,117,.08)' }} content={(p) => <Tip {...p} title={(r) => r.full} lines={(r) => [`${r.count} ${r.count === 1 ? 'entry' : 'entries'}`]} />} />
             <Bar dataKey="count" fill={BRAND} maxBarSize={24} radius={[4, 4, 0, 0]} isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>

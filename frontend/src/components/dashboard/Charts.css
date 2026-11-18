@@ -143,7 +143,7 @@
 .domain-bar__fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--brand) 0%, #4CA08E 100%);
+  background: linear-gradient(90deg, var(--brand-dk) 0%, var(--brand-bright) 100%);
   transition: width .6s cubic-bezier(.2,.8,.2,1);
 }
 

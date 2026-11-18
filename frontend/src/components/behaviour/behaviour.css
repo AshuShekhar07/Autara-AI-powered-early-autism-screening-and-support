@@ -19,7 +19,7 @@
 }
 .bh-chip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
 .bh-chip:hover { border-color: var(--brand); }
-.bh-chip--on { background: var(--brand-lt); border-color: var(--brand); color: var(--brand-dk); font-weight: 600; }
+.bh-chip--on { background: var(--black); border-color: var(--black); color: #fff; font-weight: 600; }
 .bh-chip:focus-within { outline: 2px solid var(--border-focus); outline-offset: 2px; }
 .bh-intensity { display: flex; gap: 8px; }
 .bh-chip--num { flex: 1; justify-content: center; border-radius: var(--r-sm); font-weight: 600; }

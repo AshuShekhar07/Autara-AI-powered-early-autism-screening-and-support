@@ -1,8 +1,11 @@
 /* ── WelcomeBanner ── */
 
 .welcome-banner {
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dk) 100%);
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(20,184,166,.38) 0%, rgba(20,184,166,0) 55%),
+    linear-gradient(120deg, var(--black) 0%, #0E2A2C 60%, var(--brand-dk) 100%);
   border-radius: var(--r-lg);
+  border-left: 5px solid var(--brand-bright);
   padding: 32px 36px;
   display: flex;
   align-items: center;
@@ -11,7 +14,7 @@
   margin-bottom: 28px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 32px -6px rgba(47,111,98,.35);
+  box-shadow: var(--shadow-md);
 }
 
 /* Subtle decorative leaf silhouette */
@@ -46,8 +49,8 @@
 
 .welcome-banner__greeting {
   font-family: var(--font-head);
-  font-size: 1.65rem;
-  font-weight: 700;
+  font-size: 1.7rem;
+  font-weight: 800;
   color: #fff;
   letter-spacing: -.03em;
   line-height: 1.2;
@@ -56,7 +59,7 @@
 
 .welcome-banner__sub {
   font-size: .9rem;
-  color: rgba(255,255,255,.75);
+  color: rgba(255,255,255,.82);
   line-height: 1.5;
   max-width: 380px;
 }
@@ -69,8 +72,8 @@
   align-items: center;
   gap: 8px;
   padding: 13px 24px;
-  background: var(--gold);
-  color: #fff;
+  background: #fff;
+  color: var(--black);
   border: none;
   border-radius: var(--r-sm);
   font-family: var(--font-ui);
@@ -81,15 +84,15 @@
   transition: background var(--dur) var(--ease),
               transform var(--dur) var(--ease),
               box-shadow var(--dur) var(--ease);
-  box-shadow: 0 4px 18px -4px rgba(201,138,62,.6);
+  box-shadow: 0 1px 2px rgba(0,0,0,.3);
 }
 
 .welcome-banner__cta:hover {
-  background: var(--gold-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px -4px rgba(201,138,62,.55);
+  background: var(--brand-bright);
+  color: var(--black);
   text-decoration: none;
 }
+.welcome-banner__cta:focus-visible { outline: 3px solid var(--brand-bright); outline-offset: 3px; }
 
 .welcome-banner__cta:active {
   transform: translateY(0);

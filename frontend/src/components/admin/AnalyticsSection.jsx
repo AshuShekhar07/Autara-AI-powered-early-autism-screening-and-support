@@ -65,7 +65,7 @@ export default function AnalyticsSection() {
                   <CartesianGrid stroke={GRID} vertical={false} />
                   <XAxis dataKey="label" {...axisProps} />
                   <YAxis allowDecimals={false} {...axisProps} axisLine={false} />
-                  <Tooltip cursor={{ fill: 'rgba(47,111,98,.06)' }} content={(p) => <Tip {...p} title={(r) => r.label} lines={(r) => [r.hidden ? 'Hidden: fewer than 5' : `${r.count} screenings`]} />} />
+                  <Tooltip cursor={{ fill: 'rgba(11,122,117,.08)' }} content={(p) => <Tip {...p} title={(r) => r.label} lines={(r) => [r.hidden ? 'Hidden: fewer than 5' : `${r.count} screenings`]} />} />
                   <Bar dataKey="count" fill={BRAND} maxBarSize={40} radius={[4, 4, 0, 0]} isAnimationActive={false}>
                     <LabelList dataKey="count" position="top" fill={AXIS_TEXT} fontSize={11} content={({ x, y, width, index }) => (
                       <text x={x + width / 2} y={y - 6} textAnchor="middle" fill={AXIS_TEXT} fontSize="11">{tierData[index].hidden ? HIDDEN : tierData[index].count}</text>

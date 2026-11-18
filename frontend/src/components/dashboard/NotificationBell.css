@@ -43,7 +43,7 @@
   height: 17px;
   padding: 0 4px;
   border-radius: 999px;
-  background: #C94040;
+  background: var(--danger);
   color: #fff;
   font-size: .65rem;
   font-weight: 700;
@@ -141,7 +141,7 @@
 .notif-item:hover { background: var(--bg-tint); }
 
 .notif-item--unread { background: var(--brand-lt); }
-.notif-item--unread:hover { background: #daeae6; }
+.notif-item--unread:hover { background: var(--brand-lt); }
 
 .notif-item__body {
   display: flex;
@@ -195,7 +195,7 @@
 
 .notif-icon--care_team { background: var(--brand-lt); color: var(--brand); }
 .notif-icon--resource  { background: var(--gold-lt);  color: var(--gold); }
-.notif-icon--profile   { background: #EAF0EE;          color: var(--brand-dk); }
+.notif-icon--profile   { background: var(--bg-tint);          color: var(--brand-dk); }
 .notif-icon--system    { background: var(--bg-tint);   color: var(--ink-muted); }
 
 /* ── Empty state ── */

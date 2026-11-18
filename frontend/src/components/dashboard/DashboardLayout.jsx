@@ -13,14 +13,14 @@ function LogoMark({ size = 32 }) {
       viewBox="0 0 44 44" fill="none"
       aria-hidden="true"
     >
-      <rect width="44" height="44" rx="12" fill="#2F6F62" />
+      <rect width="44" height="44" rx="9" fill="#0B7A75" />
       <path
         d="M22 10c0 0-10 6-10 14a10 10 0 0 0 20 0C32 16 22 10 22 10z"
         fill="rgba(255,255,255,.92)"
       />
       <path
         d="M22 14v18"
-        stroke="#2F6F62" strokeWidth="2" strokeLinecap="round"
+        stroke="#0B7A75" strokeWidth="2" strokeLinecap="round"
       />
     </svg>
   )

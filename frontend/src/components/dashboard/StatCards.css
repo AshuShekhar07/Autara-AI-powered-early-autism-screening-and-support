@@ -11,11 +11,12 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  padding: 20px 22px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   box-shadow: var(--shadow-xs);
+  border-top: 3px solid var(--brand);
   transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
@@ -46,15 +47,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--brand-lt);
-  color: var(--brand);
+  background: var(--black);
+  color: var(--brand-bright);
   flex-shrink: 0;
 }
 
 .stat-card__value {
   font-family: var(--font-head);
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 1.85rem;
+  font-weight: 800;
   color: var(--ink);
   letter-spacing: -.03em;
   line-height: 1;
@@ -92,4 +93,8 @@
   .stat-card__value {
     font-size: 1.4rem;
   }
+}
+
+@media (max-width: 360px) {
+  .stat-cards { grid-template-columns: 1fr; }
 }

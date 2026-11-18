@@ -1,66 +1,74 @@
 /* ============================================================
    Autara — Design System Tokens
-   Mirrors the established palette from autara-dashboard/css/styles.css
-   ─ Background:    #F5F7F3 (soft sage-tinted off-white)
-   ─ Ink / primary: #1F2E2B (deep teal-charcoal)
-   ─ Brand:         #2F6F62 (muted deep teal)
-   ─ Accent CTA:    #C98A3E (warm amber-gold — sparing)
-   ─ Muted:         #646A7E (slate gray, 4.5:1+ on white)
-   ─ Headings:  Fraunces
-   ─ Body/UI:   Public Sans
+   Clinical, sharp look: clean white surfaces, teal brand, black for emphasis.
+   ─ Background:    #F3F6F7 (cool clinical off-white)
+   ─ Ink:           #0A0F12 (near-black — headings, primary buttons, sidebar)
+   ─ Brand:         #0B7A75 (healthcare teal)
+   ─ Status amber:  #C98A3E (used only for "medium/higher risk" and notices)
+   ─ Headings:  Plus Jakarta Sans (800/700)
+   ─ Body/UI:   Inter
    ============================================================ */
 
 /* ── TOKENS ── */
 :root {
-  --bg:              #F5F7F3;
+  --bg:              #F3F6F7;
   --bg-card:         #FFFFFF;
-  --bg-tint:         #EEF2ED;
-  --bg-warm:         #FAF4EC;
+  --bg-tint:         #EDF3F3;
+  --bg-warm:         #F2F8F8;
 
-  --ink:             #1F2E2B;
-  --ink-secondary:   #4E5A57;
-  --ink-muted:       #646A7E;
+  --ink:             #0A0F12;
+  --ink-secondary:   #33434A;
+  --ink-muted:       #56666D;
 
-  --brand:           #2F6F62;
-  --brand-lt:        #E8F0EE;
-  --brand-dk:        #224F45;
+  --black:           #0A0F12;
+  --black-soft:      #161E23;
+  --black-line:      #26313A;
+
+  --brand:           #0B7A75;
+  --brand-lt:        #E2F3F1;
+  --brand-dk:        #065A56;
+  --brand-bright:    #14B8A6;
+
+  /* primary call-to-action: black button, teal on hover */
+  --cta:             #0A0F12;
+  --cta-hover:       #065A56;
 
   --gold:            #C98A3E;
   --gold-hover:      #AE7530;
-  --gold-strong:     #9A6420;   /* amber for buttons with white text (4.98:1) */
-  --gold-strong-hover: #8A5A16; /* 5.9:1 */
-  --gold-lt:         #FAF3EA;
+  --gold-lt:         #FBF3E8;
 
-  --ok-text:         #2C6351;
-  --ok-bg:           #E4EFEA;
-  --ok-border:       #BED5C2;
+  --ok-text:         #1F6B4F;
+  --ok-bg:           #E3F2EA;
+  --ok-border:       #B7DCC6;
 
   --notice-text:     #8C5028;
-  --notice-bg:       #F7EDE4;
-  --notice-border:   #E3C5A5;
+  --notice-bg:       #FAEFE4;
+  --notice-border:   #E8C9A6;
 
-  --error-text:      #8B2020;
-  --error-bg:        #FDECEA;
-  --error-border:    #E3B5B5;
+  --error-text:      #9B1C1C;
+  --error-bg:        #FDECEC;
+  --error-border:    #F0B9B9;
+  --danger:          #C62828;
 
-  --border:          #E0E6DE;
-  --border-md:       #CDD6CB;
-  --border-focus:    #2F6F62;
+  --border:          #DDE5E7;
+  --border-md:       #C4D0D3;
+  --border-focus:    #0B7A75;
 
-  --shadow-xs:  0 2px 8px -2px rgba(31,46,43,.05);
-  --shadow-sm:  0 4px 18px -3px rgba(31,46,43,.07);
-  --shadow-md:  0 12px 36px -6px rgba(31,46,43,.10);
-  --shadow-glow:0 8px 28px -4px rgba(201,138,62,.32);
+  --shadow-xs:  0 1px 2px rgba(10,15,18,.06);
+  --shadow-sm:  0 1px 3px rgba(10,15,18,.08), 0 1px 2px rgba(10,15,18,.04);
+  --shadow-md:  0 10px 28px -8px rgba(10,15,18,.18), 0 2px 6px rgba(10,15,18,.06);
+  --shadow-glow:0 1px 2px rgba(10,15,18,.24);
+  --focus-ring: 0 0 0 3px rgba(11,122,117,.22);
 
-  --r-sm:  8px;
-  --r-md:  14px;
-  --r-lg:  20px;
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  12px;
 
-  --font-head: 'Fraunces', Georgia, serif;
-  --font-ui:   'Public Sans', system-ui, sans-serif;
+  --font-head: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-ui:   'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --ease: cubic-bezier(.2,.8,.2,1);
-  --dur:  220ms;
+  --dur:  160ms;
 }
 
 /* ── RESET ── */
@@ -75,13 +83,16 @@ body {
   font-family: var(--font-ui);
   font-size: 15px;
   line-height: 1.6;
+  font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-head);
-  line-height: 1.25;
-  letter-spacing: -.02em;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -.025em;
   color: var(--ink);
 }
 
@@ -129,12 +140,12 @@ a:focus-visible {
 .field input:focus,
 .field select:focus {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(47,111,98,.14);
+  box-shadow: var(--focus-ring);
 }
 
 .field input.has-error,
 .field select.has-error {
-  border-color: #C94040;
+  border-color: var(--danger);
   background: var(--error-bg);
 }
 
@@ -153,26 +164,26 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 11px 22px;
   border: none;
   border-radius: var(--r-sm);
   font-family: var(--font-ui);
-  font-size: .95rem;
+  font-size: .92rem;
   font-weight: 600;
+  letter-spacing: -.005em;
   transition: all var(--dur) var(--ease);
   cursor: pointer;
 }
 
-/* Amber CTA — primary submit */
+/* Black CTA — primary submit (turns teal on hover) */
 .btn--primary {
-  background: var(--gold-strong);
+  background: var(--cta);
   color: #fff;
   box-shadow: var(--shadow-glow);
 }
 .btn--primary:hover:not(:disabled) {
-  background: var(--gold-strong-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 32px -4px rgba(201,138,62,.42);
+  background: var(--cta-hover);
+  box-shadow: 0 4px 14px -4px rgba(6,90,86,.45);
 }
 .btn--primary:active:not(:disabled) { transform: translateY(0); }
 .btn--primary:disabled {
@@ -183,11 +194,12 @@ a:focus-visible {
 
 /* Brand ghost */
 .btn--ghost {
-  background: transparent;
-  color: var(--brand);
+  background: var(--bg-card);
+  color: var(--brand-dk);
   border: 1.5px solid var(--brand);
 }
-.btn--ghost:hover { background: var(--brand-lt); }
+.btn--ghost:hover:not(:disabled) { background: var(--brand-lt); border-color: var(--brand-dk); }
+.btn--ghost:disabled { opacity: .5; cursor: not-allowed; }
 
 .btn--full { width: 100%; }
 
@@ -212,7 +224,7 @@ button:focus-visible {
 }
 
 .spinner--brand {
-  border-color: rgba(47,111,98,.2);
+  border-color: rgba(11,122,117,.2);
   border-top-color: var(--brand);
 }
 

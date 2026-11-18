@@ -24,7 +24,15 @@ describe('colour contrast of text tokens (WCAG AA = 4.5:1)', () => {
     for (const bg of ['#ffffff', '#eef2ed', '#f5f7f3']) expect(contrast(token('ink-muted'), bg)).toBeGreaterThanOrEqual(4.5)
   })
   it('primary button text (white) is readable on the button colours', () => {
-    expect(contrast('#ffffff', token('gold-strong'))).toBeGreaterThanOrEqual(4.5)
-    expect(contrast('#ffffff', token('gold-strong-hover'))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast('#ffffff', token('cta'))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast('#ffffff', token('cta-hover'))).toBeGreaterThanOrEqual(4.5)
+  })
+  it('brand teal works as text on white/tint and as a background for white text', () => {
+    for (const bg of ['#ffffff', token('bg-tint'), token('bg')]) expect(contrast(token('brand'), bg)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast('#ffffff', token('brand'))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(token('brand-dk'), token('brand-lt'))).toBeGreaterThanOrEqual(4.5)
+  })
+  it('muted text is readable on the new clinical backgrounds too', () => {
+    for (const bg of [token('bg'), token('bg-tint'), token('bg-warm')]) expect(contrast(token('ink-muted'), bg)).toBeGreaterThanOrEqual(4.5)
   })
 })

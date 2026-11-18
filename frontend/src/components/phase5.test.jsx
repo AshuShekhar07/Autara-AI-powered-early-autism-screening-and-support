@@ -93,6 +93,14 @@ describe('InsightForFamily', () => {
 })
 
 describe('AskAutaraCard', () => {
+  it('does not scroll the page when it first appears (it used to jump the dashboard down to this card)', () => {
+    const spy = vi.fn()
+    Element.prototype.scrollIntoView = spy
+    render(<AskAutaraCard />)
+    expect(spy).not.toHaveBeenCalled()
+    delete Element.prototype.scrollIntoView
+  })
+
   it('posts the question with the active child for context and lists sources', async () => {
     api.post.mockResolvedValue({ answer: 'A follow-up interview asks more questions.', sources: [{ title: 'Approved Guide', publisher: 'Demo Publisher', url: 'https://x.test', version: '2024', page: 4 }], guardrail: null })
     render(<AskAutaraCard />)
