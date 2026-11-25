@@ -10,4 +10,22 @@
 #     url: "https://..."
 #     version: "2024"                      # edition / year / version
 #     docType: guideline                   # guideline | screening-manual | fact-sheet | other
-sources: []
+sources:
+  - file: autara-product-help.md
+    title: "Autara product help (demo)"
+    publisher: "Autara team"
+    url: "https://example.test/autara-help"
+    version: "demo-1"
+    docType: fact-sheet
+  - file: "cdc-developmental-screening-page.md"
+    title: "Developmental Monitoring and Screening (CDC web page)"
+    publisher: "CDC, Learn the Signs. Act Early."
+    url: "https://www.cdc.gov/act-early/about/developmental-monitoring-and-screening.html"
+    version: "web page, copied 2026-10-16"
+    docType: fact-sheet
+  - file: "LTSAE_Developmental-Monitoring_508c.pdf"
+    title: "Developmental Monitoring and Screening (CDC fact sheet)"
+    publisher: "CDC, Learn the Signs. Act Early."
+    url: "https://www.cdc.gov/ActEarly"
+    version: "March 2025"
+    docType: fact-sheet
