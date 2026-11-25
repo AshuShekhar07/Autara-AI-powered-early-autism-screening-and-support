@@ -21,7 +21,8 @@ def host() -> str:
 
 
 def port() -> int:
-    return int(os.environ.get("AI_PORT", "8000"))
+    # Hosting platforms (Render, Railway, ...) tell the app which port to use in $PORT.
+    return int(os.environ.get("AI_PORT") or os.environ.get("PORT") or "8000")
 
 
 # ── LLM provider (Gemini by default; the interface in app/llm/base.py lets OpenAI be added later) ──

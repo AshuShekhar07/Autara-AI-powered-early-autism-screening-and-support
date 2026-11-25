@@ -1,0 +1,95 @@
+# Render Blueprint: deploys the whole of Autara (website + backend + AI service) in one go.
+# Render dashboard → New → Blueprint → pick this repository and branch. Values marked `sync: false` are
+# secrets / URLs that Render asks you to type in (they are never stored in git). Step-by-step: docs/DEPLOY.md
+services:
+  # ── AI service (FastAPI, Docker). Public URL, but every endpoint except /health needs the X-Internal-Key secret.
+  - type: web
+    name: autara-ai
+    runtime: docker
+    rootDir: ai-service
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    envVars:
+      - key: AI_HOST
+        value: 0.0.0.0
+      - key: AI_SERVICE_KEY          # random secret made by Render; the backend copies it below
+        generateValue: true
+      - key: ASK_MODE                # no Gemini: Groq writes answers, offline index finds passages
+        value: backup
+      - key: BACKUP_LLM_API_KEY      # your Groq key
+        sync: false
+      - key: BACKUP_LLM_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: BACKUP_LLM_MODEL
+        value: openai/gpt-oss-20b
+      - key: GEMINI_API_KEY          # optional; leave empty
+        sync: false
+
+  # ── Backend API (Node/Express)
+  - type: web
+    name: autara-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: singapore
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGODB_URI
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: AI_SERVICE_URL          # the AI service's https://….onrender.com address
+        sync: false
+      - key: AI_SERVICE_KEY
+        fromService:
+          type: web
+          name: autara-ai
+          envVarKey: AI_SERVICE_KEY
+      - key: ALLOWED_ORIGINS         # the website's https://….onrender.com address
+        sync: false
+      - key: ADMIN_EMAILS            # the two admin emails, comma-separated
+        sync: false
+      - key: AUTH_CHECK_REVOKED
+        value: "true"
+      - key: ASK_RATE_LIMIT_PER_HOUR
+        value: "20"
+
+  # ── Website (React/Vite, static files)
+  - type: web
+    name: autara-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite                # React Router: every page path serves index.html
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_BASE_URL       # the backend's https://….onrender.com address
+        sync: false
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
