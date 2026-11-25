@@ -1,14 +1,14 @@
 const SessionNote = require('../models/SessionNote')
 const User = require('../models/User')
 const { AppError, ok, created, asyncHandler } = require('../utils/respond')
-const { requireBodyObject, cleanString, parseLimit, parseDate } = require('../utils/validate')
+const { requireBodyObject, cleanString, parseLimit, parseDate, isObjectId } = require('../utils/validate')
 const { audit } = require('../lib/audit')
 
 async function withAuthors(notes) {
   const users = await User.find({ uid: { $in: [...new Set(notes.map((n) => n.authorUid))] } }).lean()
   const names = Object.fromEntries(users.map((u) => [u.uid, u.name]))
   return notes.map((n) => ({
-    id: String(n._id), childId: String(n.childId), text: n.text, createdAt: n.createdAt,
+    id: String(n._id), childId: String(n.childId), text: n.text, createdAt: n.createdAt, editedAt: n.editedAt || null,
     authorUid: n.authorUid, authorName: names[n.authorUid] || 'Unknown',
   }))
 }
@@ -36,4 +36,33 @@ const listNotes = asyncHandler(async (req, res) => {
   return ok(res, { notes: await withAuthors(page), nextBefore: rows.length > limit ? page[page.length - 1].createdAt : null })
 })
 
-module.exports = { createNote, listNotes }
+/** Loads a note of this child written by the requesting therapist (anything else → 404). */
+async function ownNote(req) {
+  const id = req.params.noteId
+  const note = isObjectId(id) && await SessionNote.findOne({ _id: id, childId: req.child._id })
+  if (!note) throw new AppError(404, 'NOTE_NOT_FOUND', 'Session note not found.')
+  if (note.authorUid !== req.dbUser.uid) throw new AppError(403, 'NOT_NOTE_AUTHOR', 'Only the therapist who wrote this note can change it.')
+  return note
+}
+
+/** PATCH /api/children/:id/session-notes/:noteId { text } (the note's author) */
+const updateNote = asyncHandler(async (req, res) => {
+  const text = cleanString(requireBodyObject(req).text, { max: 4000 })
+  if (!text) throw new AppError(400, 'VALIDATION_ERROR', 'Note text is required (up to 4000 characters).')
+  const note = await ownNote(req)
+  note.text = text
+  note.editedAt = new Date()
+  await note.save()
+  await audit(req, 'SESSION_NOTE_EDITED', { type: 'session_note', id: note._id }, { childId: String(req.child._id) })
+  return ok(res, { note: (await withAuthors([note]))[0] })
+})
+
+/** DELETE /api/children/:id/session-notes/:noteId (the note's author) */
+const deleteNote = asyncHandler(async (req, res) => {
+  const note = await ownNote(req)
+  await note.deleteOne()
+  await audit(req, 'SESSION_NOTE_DELETED', { type: 'session_note', id: note._id }, { childId: String(req.child._id) })
+  return ok(res, { deleted: true })
+})
+
+module.exports = { createNote, listNotes, updateNote, deleteNote }

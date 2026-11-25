@@ -37,6 +37,10 @@ function requireRole(allowedRoles, { allowUnverified = false } = {}) {
       throw new AppError(403, 'FORBIDDEN_ROLE', `Access denied. Required role: ${allowedRoles.join(' or ')}.`)
     }
 
+    if (user.disabled) {
+      throw new AppError(403, 'ACCOUNT_DISABLED', 'This account has been disabled by an administrator.')
+    }
+
     // An admin account only works while its email is on the ADMIN_EMAILS list (backend/.env).
     // Removing an address from the list switches that admin off at once, even if the database still says "admin".
     if (user.role === 'admin' && !isAllowedAdmin(user.email)) {

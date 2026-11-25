@@ -16,14 +16,8 @@
 
 .role-selector__track {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-}
-
-@media (max-width: 480px) {
-  .role-selector__track {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 .role-selector__option {

@@ -5,6 +5,7 @@ const { cleanString, parseDate, requireBodyObject } = require('../utils/validate
 const { isCareRole } = require('../utils/roles')
 const { ageInMonths } = require('../utils/age')
 const { audit } = require('../lib/audit')
+const { deleteChildData } = require('../lib/dataDeletion')
 
 const SEX_VALUES = ['female', 'male', 'other']
 
@@ -147,7 +148,25 @@ const removeCareTeamMember = asyncHandler(async (req, res) => {
   return ok(res, { careTeam: await hydrateCareTeam(req.child) })
 })
 
+/**
+ * DELETE /api/children/:id  (owning caregiver / patient)  body { confirmName }
+ * Permanently deletes the child and all their records. The caregiver must type the child's name.
+ */
+const deleteChild = asyncHandler(async (req, res) => {
+  const { confirmName } = requireBodyObject(req)
+  if (cleanString(confirmName, { max: 120 })?.toLowerCase() !== req.child.name.trim().toLowerCase()) {
+    throw new AppError(400, 'CONFIRMATION_REQUIRED', "Type the child's name exactly to confirm.")
+  }
+  const childId = req.child._id
+  const deleted = await deleteChildData(childId)
+  // The child typed in at sign-up must not come back (listChildren recreates it from these fields).
+  await User.updateOne({ uid: req.dbUser.uid }, { $unset: { 'roleDetails.childName': '', 'roleDetails.childDob': '' } })
+  await audit(req, 'CHILD_DELETED', { type: 'child', id: childId }, deleted)
+  return ok(res, { deleted })
+})
+
 module.exports = {
+  deleteChild,
   listChildren, createChild, getChild, updateChild,
   getCareTeam, addCareTeamMember, removeCareTeamMember,
   childView,

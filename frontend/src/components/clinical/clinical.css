@@ -61,3 +61,6 @@
 .in-ref { display: inline-block; padding: 2px 10px; border-radius: 6px; background: var(--bg-card); border: 1px solid var(--border-md); font-size: .76rem; }
 .in-uncertainty { background: var(--notice-bg); border: 1px solid var(--notice-border); border-radius: var(--r-sm); padding: 12px 14px; color: var(--notice-text); font-size: .88rem; }
 .in-family { background: var(--brand-lt); border-radius: var(--r-sm); padding: 12px 14px; font-size: .9rem; }
+
+.cl-note__actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.cl-note__actions .btn { padding: 6px 14px; font-size: .82rem; }

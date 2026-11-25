@@ -20,7 +20,7 @@ import { isClinicalRole } from '../../lib/roles'
  *   - Wrong role                     → /not-authorized
  */
 export default function ProtectedRoute({ children, allowedRoles, allowUnverified = false }) {
-  const { user, role, verified, loading, hydrateProfile, logout } = useAuth()
+  const { user, role, verified, loading, hydrateProfile, logout, profileError } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -33,6 +33,16 @@ export default function ProtectedRoute({ children, allowedRoles, allowUnverified
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (!role && profileError === 'ACCOUNT_DISABLED') {
+    return (
+      <div className="stub-page">
+        <h1>Your account has been disabled</h1>
+        <p>An Autara administrator has switched this account off. If you think this is a mistake, contact the Autara team.</p>
+        <button type="button" className="btn btn--ghost" onClick={() => logout()}>Log out</button>
+      </div>
+    )
   }
 
   if (!role) {

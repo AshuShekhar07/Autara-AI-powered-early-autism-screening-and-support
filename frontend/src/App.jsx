@@ -21,6 +21,7 @@ import NotAuthorized       from './pages/NotAuthorized'
 import ChildProfile        from './pages/ChildProfile'
 import Milestones          from './pages/Milestones'
 import PendingVerification from './pages/PendingVerification'
+import Account             from './pages/Account'
 import RootRedirect        from './components/auth/RootRedirect'
 import RouteErrorBoundary  from './components/RouteErrorBoundary'
 
@@ -149,6 +150,9 @@ export default function App() {
 
           {/* ── Protected: admin ── */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+
+          {/* ── Account settings (every role except admin; pending professionals too) ── */}
+          <Route path="/account" element={<ProtectedRoute allowedRoles={['caregiver', 'patient', 'therapist', 'clinician']} allowUnverified><Account /></ProtectedRoute>} />
 
           {/* ── Error pages ── */}
           <Route path="/not-authorized" element={<NotAuthorized />} />

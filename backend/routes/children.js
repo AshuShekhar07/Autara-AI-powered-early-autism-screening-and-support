@@ -21,6 +21,7 @@ router.post('/',   careRole,     c.createChild)
 
 router.get('/:id',   anyChildRole, childAccess(), c.getChild)
 router.patch('/:id', careRole,     childAccess(), requireChildOwner, c.updateChild)
+router.delete('/:id', careRole,    childAccess(), requireChildOwner, c.deleteChild)
 
 router.get('/:id/care-team',          anyChildRole, childAccess(), c.getCareTeam)
 router.post('/:id/care-team',         careRole, childAccess(), requireChildOwner, c.addCareTeamMember)
@@ -43,6 +44,8 @@ const therapistRole = requireRole(['therapist'])
 const clinicalRole  = requireRole(CLINICAL_ROLES)
 router.post('/:id/session-notes', therapistRole, childAccess(), n.createNote)
 router.get('/:id/session-notes',  clinicalRole,  childAccess(), n.listNotes)
+router.patch('/:id/session-notes/:noteId',  therapistRole, childAccess(), n.updateNote)   // author only
+router.delete('/:id/session-notes/:noteId', therapistRole, childAccess(), n.deleteNote)   // author only
 
 // ── Dashboard feeds ──
 router.get('/:id/overview', careRole,      childAccess(), d.overview)

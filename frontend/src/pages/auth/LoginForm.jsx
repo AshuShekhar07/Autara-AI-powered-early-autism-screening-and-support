@@ -32,7 +32,7 @@ function validateLogin({ email, password }) {
 export default function LoginForm() {
   const uid = useId()
   const navigate  = useNavigate()
-  const { login, hydrateProfile } = useAuth()
+  const { login, hydrateProfile, logout, profileErrorCode } = useAuth()
 
   const [fields,   setFields]   = useState({ email: '', password: '' })
   const [errors,   setErrors]   = useState({})
@@ -62,12 +62,17 @@ export default function LoginForm() {
       const profile = await hydrateProfile(cred.user)
       if (profile) {
         navigate(homeRouteFor(profile.role, profile.verified), { replace: true })
+      } else if (profileErrorCode() === 'ACCOUNT_DISABLED') {
+        await logout()
+        setFormErr('This account has been disabled by an administrator.')
       } else {
         setFormErr("You're signed in, but we couldn't load your Autara profile. Please try again in a moment.")
       }
     } catch (err) {
       // Intentionally non-specific — don't reveal whether the account exists
-      setFormErr('Incorrect email or password. Please try again.')
+      setFormErr(err?.code === 'auth/user-disabled'
+        ? 'This account has been disabled by an administrator.'
+        : 'Incorrect email or password. Please try again.')
     } finally {
       setLoading(false)
     }

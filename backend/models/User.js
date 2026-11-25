@@ -69,6 +69,18 @@ const userSchema = new mongoose.Schema(
      *   rejected → an admin said no (or revoked access later)
      * Undefined for caregiver / patient / admin.
      */
+    /** Mirrors Firebase's email_verified (updated on every GET /api/auth/me). Shown to admins. */
+    emailVerified: {
+      type:    Boolean,
+      default: false,
+    },
+
+    /** Set by an admin. A disabled account is refused on every route (and switched off in Firebase too). */
+    disabled: {
+      type:    Boolean,
+      default: false,
+    },
+
     verificationStatus: {
       type:    String,
       enum:    ['pending', 'approved', 'rejected'],

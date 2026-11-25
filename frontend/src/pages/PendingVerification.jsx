@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { homeRouteFor } from '../lib/roles'
 
@@ -48,7 +48,14 @@ export default function PendingVerification() {
           Your account hasn't been verified yet. We'll keep your details safe — check back soon.
         </div>
       )}
+      {profileData?.emailVerified === false && (
+        <div className="status-box status-box--notice" role="note">
+          Please also confirm your email address (we sent you a link) — administrators check this before approving.
+          Manage it in <Link to="/account">Account settings</Link>.
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <Link to="/account" className="btn btn--ghost">Account settings</Link>
         <button type="button" className="btn btn--ghost" onClick={check} disabled={checking}>
           {checking ? 'Checking…' : 'Check again'}
         </button>

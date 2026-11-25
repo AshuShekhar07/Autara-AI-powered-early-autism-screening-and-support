@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from 'firebase/auth'
 import { auth } from '../lib/firebase'
 import { api } from '../lib/api'
@@ -16,10 +17,14 @@ const AuthContext = createContext(null)
  * Fetches the authenticated user's profile (role, verified, roleDetails) from the backend.
  * Returns null when the profile can't be loaded (e.g. signup never finished).
  */
+let lastProfileError = null   // code of the last failed /me call, e.g. 'ACCOUNT_DISABLED'
 async function fetchUserProfile() {
   try {
-    return await api.get('/api/auth/me') // { uid, name, email, role, verified, roleDetails }
-  } catch {
+    const profile = await api.get('/api/auth/me') // { uid, name, email, role, verified, emailVerified, roleDetails }
+    lastProfileError = null
+    return profile
+  } catch (err) {
+    lastProfileError = err?.code || 'UNKNOWN_ERROR'
     return null
   }
 }
@@ -29,13 +34,18 @@ export function AuthProvider({ children }) {
   const [role,        setRole]        = useState(null)  // 'caregiver' | 'patient' | 'therapist' | 'clinician' | 'admin'
   const [verified,    setVerified]    = useState(null)  // Boolean
   const [loading,     setLoading]     = useState(true)  // true until onAuthStateChanged first fires
-  const [profileData, setProfileData] = useState(null)  // { name, roleDetails } from backend
+  const [profileData, setProfileData] = useState(null)  // { name, email, emailVerified, roleDetails } from backend
+  const [profileError, setProfileError] = useState(null) // e.g. 'ACCOUNT_DISABLED' when /me was refused
 
   const applyProfile = useCallback((profile) => {
+    setProfileError(profile ? null : lastProfileError)
     if (profile) {
       setRole(profile.role)
       setVerified(profile.verified)
-      setProfileData({ name: profile.name, email: profile.email, roleDetails: profile.roleDetails || {} })
+      setProfileData({
+        name: profile.name, email: profile.email, emailVerified: profile.emailVerified !== false,
+        roleDetails: profile.roleDetails || {},
+      })
     } else {
       setRole(null)
       setVerified(null)
@@ -51,6 +61,7 @@ export function AuthProvider({ children }) {
         applyProfile(await fetchUserProfile())
       } else {
         setUser(null)
+        lastProfileError = null
         applyProfile(null)
       }
       setLoading(false)
@@ -92,7 +103,36 @@ export function AuthProvider({ children }) {
     return profile
   }
 
-  const value = { user, role, verified, loading, profileData, login, signup, logout, resetPassword, hydrateProfile }
+  /** Emails a fresh "confirm your email" link to the signed-in user. */
+  async function resendVerification() {
+    if (auth.currentUser) await sendEmailVerification(auth.currentUser)
+  }
+
+  /**
+   * After the user clicked the link: reload the Firebase user, force a new token (it carries email_verified)
+   * and re-read the profile. Returns true when the email is now confirmed.
+   */
+  async function refreshEmailVerified() {
+    const current = auth.currentUser
+    if (!current) return false
+    await current.reload?.()
+    await current.getIdToken(true)
+    const profile = await hydrateProfile()
+    return profile?.emailVerified === true
+  }
+
+  /** Permanently deletes the account (server side) and signs out. */
+  async function deleteAccount() {
+    await api.delete('/api/auth/me', { confirm: 'DELETE' })
+    clearSessionPrefix('autara.')
+    await signOut(auth).catch(() => {})
+  }
+
+  const value = {
+    user, role, verified, loading, profileData, profileError,
+    profileErrorCode: () => lastProfileError,   // synchronous: right after hydrateProfile() returned null
+    login, signup, logout, resetPassword, hydrateProfile, resendVerification, refreshEmailVerified, deleteAccount,
+  }
 
   return (
     <AuthContext.Provider value={value}>

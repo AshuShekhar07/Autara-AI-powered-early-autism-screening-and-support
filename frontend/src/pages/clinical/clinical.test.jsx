@@ -133,7 +133,8 @@ describe('Admin verification', () => {
   it('shows org + licence and approves / rejects', async () => {
     auth.role = 'admin'
     const pending = [{ uid: 'p1', name: 'Dr Pending', email: 'p@x.test', role: 'clinician', verified: false, verificationStatus: 'pending', orgName: 'Demo Clinic', licenseNumber: 'LIC-123', createdAt: '2026-09-01T00:00:00Z' }]
-    api.get.mockImplementation(async (path, params) => (params?.status === 'pending' ? { users: pending, total: 1 } : { users: pending, total: 1 }))
+    api.get.mockImplementation(async (path, params) => (path === '/api/admin/audit' ? { entries: [], actions: [], total: 0 }
+      : params?.status === 'pending' ? { users: pending, total: 1 } : { users: pending, total: 1 }))
     api.patch.mockResolvedValue({ user: {} })
     render(<MemoryRouter><AdminDashboard /></MemoryRouter>)
     const queue = (await screen.findByRole('heading', { name: /Pending verification/ })).closest('section')

@@ -94,7 +94,7 @@ export const api = {
   post:   (path, body)         => request('POST',   path, { body: body ?? {} }),
   put:    (path, body)         => request('PUT',    path, { body: body ?? {} }),
   patch:  (path, body)         => request('PATCH',  path, { body: body ?? {} }),
-  delete: (path)               => request('DELETE', path),
+  delete: (path, body)         => request('DELETE', path, body !== undefined ? { body } : {}),
   download: (path, body)       => download('POST', path, { body: body ?? {} }),
 }
 

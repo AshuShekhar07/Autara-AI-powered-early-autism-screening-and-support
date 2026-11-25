@@ -5,6 +5,8 @@ import { initialsOf } from '../lib/format'
 import { useChildren } from '../context/ChildContext'
 import ChildSwitcher from '../components/ChildSwitcher'
 import { api } from '../lib/api'
+import DangerZone from '../components/DangerZone'
+import { clearSessionPrefix } from '../lib/safeStorage'
 import './ChildProfile.css'
 
 /**
@@ -93,7 +95,8 @@ function ChildForm({ initial, submitLabel, onSubmit, onCancel }) {
  */
 export default function ChildProfile() {
   const { activeChild, refresh, setActiveId, loading, error } = useChildren()
-  const [mode, setMode] = useState('view') // view | edit | add
+  const [mode, setMode] = useState('view') // view | edit | add | delete
+  const [deleted, setDeleted] = useState('')  // name of a child just deleted (confirmation message)
 
   const childName    = activeChild?.name || null
   const ageLabel     = calcAge(activeChild?.dob)
@@ -103,6 +106,15 @@ export default function ChildProfile() {
     await api.patch(`/api/children/${activeChild.id}`, fields)
     await refresh()
     setMode('view')
+  }
+  async function deleteChild(typedName) {
+    const id = activeChild.id
+    await api.delete(`/api/children/${id}`, { confirmName: typedName })
+    clearSessionPrefix(`autara.screeningDraft.${id}`)
+    clearSessionPrefix(`autara.behaviourDraft.${id}`)
+    setDeleted(childName)
+    setMode('view')
+    await refresh()
   }
   async function saveNew(fields) {
     const { child } = await api.post('/api/children', fields)
@@ -155,10 +167,28 @@ export default function ChildProfile() {
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <button type="button" className="btn btn--ghost" onClick={() => setMode('edit')}>Edit details</button>
                   <button type="button" className="btn btn--ghost" onClick={() => setMode('add')}>Add another child</button>
+                  <button type="button" className="btn btn--danger-ghost" onClick={() => setMode('delete')}>Delete this child</button>
                 </div>
               </>
             )}
           </section>
+        )}
+
+        {mode === 'delete' && activeChild && (
+          <DangerZone
+            title={`Delete ${childName}?`}
+            confirmWord={activeChild.name}
+            buttonLabel="Delete child permanently"
+            onConfirm={deleteChild}
+            onCancel={() => setMode('view')}
+          >
+            <p>This permanently deletes {childName}'s profile and <strong>everything recorded about them</strong>: screenings and results, behaviour logs, the care team's session notes and AI summaries, and report history.</p>
+            <p>Their care team will no longer see them. This cannot be undone. Download any reports you want to keep first.</p>
+          </DangerZone>
+        )}
+
+        {deleted && mode === 'view' && (
+          <div className="status-box status-box--ok" role="status">{deleted} and all their records were deleted.</div>
         )}
 
         {!loading && !error && !activeChild && mode !== 'add' && (

@@ -10,5 +10,7 @@ router.use(verifyFirebaseToken, requireRole(['admin']))
 router.get('/users',               admin.listUsers)
 router.patch('/users/:uid/verify', admin.verifyUser)
 router.get('/analytics',           admin.analytics)
+router.patch('/users/:uid/disabled', admin.setDisabled)
+router.get('/audit',               admin.auditLog)
 
 module.exports = router

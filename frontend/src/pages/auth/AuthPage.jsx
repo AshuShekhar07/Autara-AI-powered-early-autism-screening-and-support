@@ -14,7 +14,7 @@ import './AuthPage.css'
  */
 export default function AuthPage() {
   const [searchParams] = useSearchParams()
-  const { pathname } = useLocation()
+  const { pathname, state } = useLocation()
   // /signup and /login?tab=signup both open the signup form.
   const initialTab = pathname === '/signup' || searchParams.get('tab') === 'signup' ? 'signup' : 'login'
   const [activeTab, setActiveTab] = useState(initialTab)
@@ -59,6 +59,11 @@ export default function AuthPage() {
         id="auth-card"
         aria-label={activeTab === 'login' ? 'Log in' : 'Create an account'}
       >
+        {state?.accountDeleted && (
+          <div className="status-box status-box--ok" role="status" style={{ marginBottom: 16 }}>
+            Your account and its data have been deleted.
+          </div>
+        )}
         <AuthToggle activeTab={activeTab} onChange={setActiveTab} />
 
         <div

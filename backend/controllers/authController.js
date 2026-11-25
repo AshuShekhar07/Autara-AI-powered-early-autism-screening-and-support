@@ -2,6 +2,10 @@ const User = require('../models/User')
 const { AppError, ok, created, asyncHandler } = require('../utils/respond')
 const { cleanString, parseDate, requireBodyObject } = require('../utils/validate')
 const { isCareRole } = require('../utils/roles')
+const Child = require('../models/Child')
+const RateLimitHit = require('../models/RateLimitHit')
+const firebaseAdmin = require('../lib/firebaseAdmin')
+const { deleteChildData } = require('../lib/dataDeletion')
 const { isAllowedAdmin } = require('../lib/adminAllowlist')
 const { audit } = require('../lib/audit')
 
@@ -75,7 +79,11 @@ const signup = asyncHandler(async (req, res) => {
  */
 const me = asyncHandler(async (req, res) => {
   const user = req.dbUser
+  // keep the stored "email confirmed" flag in step with Firebase (admins see it when approving professionals)
+  const emailVerified = req.firebaseUser.email_verified === true
+  if (user.emailVerified !== emailVerified) await User.updateOne({ uid: user.uid }, { emailVerified })
   return ok(res, {
+    emailVerified,
     uid:      user.uid,
     name:     user.name,
     email:    user.email,
@@ -134,4 +142,42 @@ const adminAccess = asyncHandler(async (req, res) => {
   return ok(res, { uid: user.uid, name: user.name, email: user.email, role: 'admin', verified: true, roleDetails: {} })
 })
 
-module.exports = { signup, me, adminAccess }
+/**
+ * DELETE /api/auth/me   body { confirm: "DELETE" }
+ *
+ * Permanently deletes the signed-in user's account:
+ *   caregiver / patient  → every child they own and all of those children's records
+ *   therapist / clinician → removed from every care team (notes/reviews they wrote stay part of the child's record)
+ * then the Autara profile and the Firebase sign-in. Admins are removed by taking their email off ADMIN_EMAILS.
+ */
+const deleteAccount = asyncHandler(async (req, res) => {
+  const user = req.dbUser
+  if (user.role === 'admin') {
+    throw new AppError(400, 'ADMIN_ACCOUNT', 'Admin accounts are removed by taking the email off ADMIN_EMAILS.')
+  }
+  if (requireBodyObject(req).confirm !== 'DELETE') {
+    throw new AppError(400, 'CONFIRMATION_REQUIRED', 'Type DELETE to confirm.')
+  }
+
+  let children = 0
+  if (isCareRole(user.role)) {
+    const owned = await Child.find({ caregiverUid: user.uid }).select('_id').lean()
+    for (const c of owned) await deleteChildData(c._id)
+    children = owned.length
+  } else {
+    await Child.updateMany({ 'careTeam.uid': user.uid }, { $pull: { careTeam: { uid: user.uid } } })
+  }
+  await RateLimitHit.deleteMany({ key: user.uid })
+  await audit(req, 'ACCOUNT_DELETED', { type: 'user', id: user.uid }, { role: user.role, children })
+  await User.deleteOne({ uid: user.uid })
+
+  try {
+    await firebaseAdmin.auth().deleteUser(user.uid)
+  } catch (err) {
+    // the Autara data is already gone; a left-over sign-in has no profile and can't see anything
+    if (err?.code !== 'auth/user-not-found') console.error('[deleteAccount] Firebase deleteUser failed:', err?.code)
+  }
+  return ok(res, { deleted: true, children })
+})
+
+module.exports = { signup, me, adminAccess, deleteAccount }

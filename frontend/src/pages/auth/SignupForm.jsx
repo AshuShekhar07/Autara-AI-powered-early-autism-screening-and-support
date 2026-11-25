@@ -67,7 +67,7 @@ const isClinicalRole = r => r === 'therapist' || r === 'clinician'
 export default function SignupForm() {
   const uid      = useId()
   const navigate = useNavigate()
-  const { signup, hydrateProfile } = useAuth()
+  const { signup, hydrateProfile, resendVerification } = useAuth()
 
   const [role, setRole] = useState('caregiver')
   const [showPwd, setShowPwd] = useState(false)
@@ -127,6 +127,9 @@ export default function SignupForm() {
       // 3. POST profile to backend. The API wrapper attaches the Firebase token;
       //    the server takes uid/email from that token, so we don't send them.
       await api.post('/api/auth/signup', { name: fields.name, role, roleDetails })
+
+      // 4. Ask the person to confirm their email (a banner reminds them until they do). Never blocks sign-up.
+      await resendVerification().catch(() => {})
 
       setSuccess(true)
 

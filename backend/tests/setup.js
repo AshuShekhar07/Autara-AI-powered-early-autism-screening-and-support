@@ -2,6 +2,7 @@
 // Special uids for edge cases: "expired" (always rejected), "revoked" / "disabled" (rejected only when the
 // server asks for the revocation check, i.e. verifyIdToken(token, true)). Calls are recorded in global.__verifyCalls.
 global.__verifyCalls = []
+global.__firebaseCalls = []
 jest.mock('../lib/firebaseAdmin', () => ({
   auth: () => ({
     verifyIdToken: async (token, checkRevoked) => {
@@ -14,5 +15,8 @@ jest.mock('../lib/firebaseAdmin', () => ({
       if (checkRevoked && uid === 'disabled') fail('auth/user-disabled')
       return { uid, email, email_verified: flag !== 'unverified' }
     },
+    deleteUser: async (uid) => { global.__firebaseCalls.push(['deleteUser', uid]) },
+    updateUser: async (uid, props) => { global.__firebaseCalls.push(['updateUser', uid, props]) },
+    revokeRefreshTokens: async (uid) => { global.__firebaseCalls.push(['revokeRefreshTokens', uid]) },
   }),
 }))

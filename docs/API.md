@@ -62,7 +62,8 @@ admin → never (`403 ADMIN_NO_CHILD_ACCESS`). Any other "no" is `404 CHILD_NOT_
 | Method & path | Roles | Description |
 | --- | --- | --- |
 | `POST /api/auth/signup` | any signed-in Firebase user | Body `{ name, role, roleDetails }`. **`uid` and `email` come from the verified token, never the body.** Roles: caregiver, patient, therapist, clinician (admins use the hidden `/admin/login` page — see `POST /api/auth/admin-access`). `roleDetails`: `{childName, childDob}` or `{orgName, licenseNumber}`. Clinical accounts start unverified. Admin is never a sign-up role. → `201 { uid, role, verified }` |
-| `GET /api/auth/me` | any (unverified clinical allowed) | `{ uid, name, email, role, verified, roleDetails }` |
+| `GET /api/auth/me` | any (unverified clinical allowed) | `{ uid, name, email, role, verified, emailVerified, roleDetails }` (`emailVerified` mirrors Firebase and is stored for admins) |
+| `DELETE /api/auth/me` | any non-admin (unverified clinical allowed) | Body `{ confirm: "DELETE" }`. Caregiver/patient: deletes every child they own and all those children's records; therapist/clinician: removed from every care team (their notes/reviews stay in the child's record). Then the profile and the Firebase sign-in. Audited `ACCOUNT_DELETED`. Admin → `400 ADMIN_ACCOUNT`. |
 | `POST /api/auth/admin-access` | any signed-in Firebase user | Used only by the hidden `/admin/login` page. Body `{ name? }`. Lets in **only** emails listed in `ADMIN_EMAILS` (backend `.env`) whose address is confirmed in Firebase: creates the admin profile on first use, switches an existing account on that email to admin (audited `ADMIN_PROMOTED`). Otherwise `403 NOT_ADMIN` ("You're not an admin", audited `ADMIN_ACCESS_DENIED`) or `403 EMAIL_NOT_VERIFIED`. Every admin route also re-checks the list, so removing an email switches that admin off. → `200 { uid, name, email, role: 'admin', verified: true }` |
 
 ## Children, care team, milestones
@@ -73,6 +74,7 @@ admin → never (`403 ADMIN_NO_CHILD_ACCESS`). Any other "no" is `404 CHILD_NOT_
 | `POST /api/children` | care roles | `{ name, dob, sex? }` |
 | `GET /api/children/:id` | anyone with access | Child incl. `ageMonths`, care-team uids |
 | `PATCH /api/children/:id` | owner | `{ name?, dob?, sex? }` |
+| `DELETE /api/children/:id` | owner | Body `{ confirmName }` (the child's name, any case). Deletes the child with its screenings, behaviour logs, session notes, insights and report rows; the sign-up child is not recreated. Audited `CHILD_DELETED` with counts. |
 | `GET /api/children/:id/care-team` | anyone with access | Members with names / organisation |
 | `POST /api/children/:id/care-team` | owner | `{ email }` → adds a **verified** therapist/clinician; `404 PROFESSIONAL_NOT_FOUND` otherwise; audited `CARE_TEAM_ADDED` |
 | `DELETE /api/children/:id/care-team/:uid` | owner | Audited `CARE_TEAM_REMOVED` |
@@ -109,6 +111,8 @@ Status lifecycle (one place: `backend/lib/screeningStatus.js`):
 | `GET /api/children/:id/behaviour-summary` | anyone with access | `?from=&to=` → counts per behaviour, antecedent × behaviour matrix, consequences per behaviour, weekly trend, average intensity, hour/weekday distribution, top-3 pairs |
 | `POST /api/children/:id/session-notes` | therapist | `{ text }` |
 | `GET /api/children/:id/session-notes` | therapist, clinician | Never caregivers |
+| `PATCH /api/children/:id/session-notes/:noteId` | the note's author (therapist) | `{ text }`; sets `editedAt`; others `403 NOT_NOTE_AUTHOR`; audited |
+| `DELETE /api/children/:id/session-notes/:noteId` | the note's author (therapist) | audited `SESSION_NOTE_DELETED` |
 
 ## AI insights and Ask Autara
 
@@ -141,6 +145,8 @@ Status lifecycle (one place: `backend/lib/screeningStatus.js`):
 | `GET /api/admin/users` | admin | `?role=&verified=&status=pending\|approved\|rejected&page=&limit=`. Shows organisation + licence for clinical accounts; never child details |
 | `PATCH /api/admin/users/:uid/verify` | admin | `{ verified: true \| false }` (reject / revoke = false); audited |
 | `GET /api/admin/analytics` | admin | Anonymised aggregates, every count < 5 hidden (`null`), secondary suppression |
+| `PATCH /api/admin/users/:uid/disabled` | admin | `{ disabled: true \| false }`. A disabled user gets `403 ACCOUNT_DISABLED` on every route; their Firebase sign-in is disabled and signed out. Admins can't be disabled. Audited. |
+| `GET /api/admin/audit` | admin | `?action=&page=&limit=` → `{ entries: [{ at, action, actorName, actorRole, targetType, targetId, meta }], actions, total }`, newest first. Rows hold ids and counts only. |
 
 ## Internal AI service (FastAPI, not reachable from the browser)
 
@@ -160,7 +166,6 @@ All except `/health` need the `X-Internal-Key` header (`401` without it; `503` i
 
 | Item | Note |
 | --- | --- |
-| `GET /api/admin/audit-logs` | Audit rows are written for every sensitive action but there is no viewer yet |
 | Clinician editing of an AI summary before approval | Today: approve or regenerate |
 | Push / email notifications for behaviour-frequency spikes | Notifications are in-app and derived |
 | Therapist report export | Therapists are read-only by design for now |

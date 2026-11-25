@@ -137,6 +137,14 @@ function UserMenu({ user, name, role, onLogout }) {
 
       {open && (
         <div className="db-user-menu__dropdown" role="menu" aria-label="User menu">
+          {role !== 'admin' && (
+            <Link to="/account" className="db-dropdown-item" role="menuitem" onClick={() => setOpen(false)}>
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+              </svg>
+              Account settings
+            </Link>
+          )}
           <button
             type="button"
             className="db-dropdown-item db-dropdown-item--danger"
@@ -152,6 +160,36 @@ function UserMenu({ user, name, role, onLogout }) {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ── "Confirm your email" reminder (until the person clicks the link Firebase emailed them) ── */
+function EmailConfirmBanner({ email }) {
+  const { resendVerification, refreshEmailVerified } = useAuth()
+  const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function resend() {
+    setBusy(true); setMsg('')
+    try { await resendVerification(); setMsg(`Sent. Check the inbox (and spam folder) of ${email}.`) }
+    catch { setMsg('Could not send right now. Please wait a minute and try again.') }
+    setBusy(false)
+  }
+  async function check() {
+    setBusy(true); setMsg('')
+    const ok = await refreshEmailVerified().catch(() => false)
+    if (!ok) setMsg("It isn't confirmed yet. Open the link in the email, then press this again.")
+    setBusy(false)
+  }
+
+  return (
+    <div className="status-box status-box--notice email-banner" role="status">
+      <span><strong>Please confirm your email address.</strong> We sent a link to {email}. {msg}</span>
+      <span className="email-banner__actions">
+        <button type="button" className="sc-link-btn" onClick={resend} disabled={busy}>Send the link again</button>
+        <button type="button" className="sc-link-btn" onClick={check} disabled={busy}>I've confirmed it</button>
+      </span>
     </div>
   )
 }
@@ -253,6 +291,7 @@ export default function DashboardLayout({ children, activeNav = 'dashboard', pag
 
         {/* Page content */}
         <main className="db-content" aria-label="Page content">
+          {role !== 'admin' && profileData?.emailVerified === false && <EmailConfirmBanner email={profileData.email} />}
           {children}
         </main>
       </div>

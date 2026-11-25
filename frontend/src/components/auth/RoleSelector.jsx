@@ -3,7 +3,8 @@ import './RoleSelector.css'
 
 const ROLES = [
   { id: 'caregiver',  label: 'Caregiver'  },
-  { id: 'patient',    label: 'Patient'     },
+  // 'patient' is no longer offered at sign-up (the M-CHAT-R is a toddler questionnaire filled in by a caregiver).
+  // Existing patient accounts keep working exactly like caregiver accounts.
   { id: 'therapist',  label: 'Therapist'   },
   { id: 'clinician',  label: 'Clinician'   },
 ]
